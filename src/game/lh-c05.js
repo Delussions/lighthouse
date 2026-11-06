@@ -6307,7 +6307,10 @@ var mi = 0.2,
         (this.group.name = e.node))
     }
     load(e) {
-      let t = e.getObjectByName(this.kind.node) ?? e
+      if (this.model) return
+      let r = e ?? this.buildModel?.()
+      if (!r) return
+      let t = r.getObjectByName(this.kind.node) ?? r
       ;(t.position.set(0, 0, 0),
         Y(t),
         t.traverse((e) => {
