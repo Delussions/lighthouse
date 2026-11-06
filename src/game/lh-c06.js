@@ -82,6 +82,10 @@ import {
   w as Ue,
   x as We,
   y as Ge,
+  SeatPlacer,
+  LanternPlacer,
+  PlanterPlacer,
+  CrabTrapPlacer,
 } from './lh-c05.js'
 import {
   HOTBAR_ITEMS as X,
@@ -4179,6 +4183,10 @@ var xn = 34,
       blocks: 0,
       benches: 0,
       bonfires: 0,
+      seats: 0,
+      lanterns: 0,
+      planters: 0,
+      crabTraps: 0,
       axe: !1,
       pickaxe: !1,
       rod: !1,
@@ -4285,7 +4293,7 @@ var xn = 34,
         <p class="have"></p>
         </div>
         <div class="split-side bench-side" hidden>
-          <h3 class="make-title">Herramientas</h3>
+          <h3 class="make-title">Herramientas y Planos</h3>
           <div class="make-list bench-list"></div>
         </div>
         </div>
@@ -4780,7 +4788,15 @@ var xn = 34,
                 ? t.benches
                 : e === `bonfire`
                   ? t.bonfires
-                  : 0
+                  : e === `seat`
+                    ? t.seats
+                    : e === `lantern`
+                      ? t.lanterns
+                      : e === `planter`
+                        ? t.planters
+                        : e === `crab_trap`
+                          ? t.crabTraps
+                          : 0
     }
     renderItems() {
       let e = X.filter((e) => this.itemCount(e.tool) > 0 || this.tool === e.tool),
@@ -4836,7 +4852,7 @@ var xn = 34,
         let e = this.itemCount(`build`)
         ;((r.textContent = n(e)), r.classList.toggle(`empty`, e === 0))
       }
-      for (let e of [`bench`, `bonfire`]) {
+      for (let e of [`bench`, `bonfire`, `seat`, `lantern`, `planter`, `crab_trap`]) {
         let t = this.slots.get(e)?.querySelector(`.badge`)
         if (!t) continue
         let r = this.itemCount(e)
@@ -5029,10 +5045,16 @@ var xn = 34,
     }
     shortExplained = 0
     poor(e) {
+      let names = {
+        bench: `una mesa de trabajo`,
+        bonfire: `una fogata`,
+        seat: `un banco mirador`,
+        lantern: `un farolillo marino`,
+        planter: `una jardinera de bayas`,
+        crab_trap: `una trampa de cangrejos`,
+      }
       ;(this.toast(
-        e === `bench`
-          ? `Fabrica primero una mesa de trabajo en tu mochila`
-          : `Fabrica primero una fogata en tu mochila`,
+        `Fabrica primero ${names[e] ?? `ese objeto`} en tu mesa de trabajo o mochila`,
         `backpack`,
         3400
       ),
@@ -5083,6 +5105,14 @@ var xn = 34,
           !(r.id === `pickaxe` && t.pickaxe) &&
           !(r.id === `rod` && t.rod)
       )
+    }
+    lockedBlueprints(e) {
+      let t = this.inv
+      return t.blocks === 1 / 0
+        ? []
+        : Ve.filter(
+            (r) => r.at === e && r.blueprint && !t.blueprints.includes(r.id)
+          )
     }
     benchPlaced() {
       this.once(
@@ -5740,20 +5770,27 @@ var xn = 34,
       let t = X.find((t) => t.tool === e.tool)
       return `<b>${e.name}</b> · ${t?.tip ?? ``}`
     }
-    renderMakeList(e, t) {
+    renderMakeList(e, t, locked = []) {
       let n = this.inv,
         r = n.blocks === 1 / 0,
         i = (e, t, n) => {
           if (!t) return ``
           let i = !r && n < t
           return `<span class="cost${i ? ` short` : ``}" aria-label="${t} ${e}">${W(e, `mini`)}<b>${i ? `${n}<i>/${t}</i>` : t}</b></span>`
-        }
-      ;((e.innerHTML = t
-        .map((e) => {
-          let t = r || (n.wood >= e.wood && n.stone >= e.stone)
-          return `<div class="make-row" data-recipe="${e.id}" data-tip="recipe">${W(e.icon)}<span class="row-text">${e.name}<span class="costs">${r ? `<small>Gratis en modo creativo</small>` : i(`wood`, e.wood, n.wood) + i(`stone`, e.stone, n.stone)}</span></span><button class="btn primary small make${t ? `` : ` disabled`}" data-recipe="${e.id}"><span class="pad-only">${K(`cross`)}</span>Hacer</button></div>`
-        })
-        .join(``)),
+        },
+        unlockedHtml = t
+          .map((e) => {
+            let t = r || (n.wood >= e.wood && n.stone >= e.stone)
+            return `<div class="make-row" data-recipe="${e.id}" data-tip="recipe">${W(e.icon)}<span class="row-text">${e.name}<span class="costs">${r ? `<small>Gratis en modo creativo</small>` : i(`wood`, e.wood, n.wood) + i(`stone`, e.stone, n.stone)}</span></span><button class="btn primary small make${t ? `` : ` disabled`}" data-recipe="${e.id}"><span class="pad-only">${K(`cross`)}</span>Hacer</button></div>`
+          })
+          .join(``),
+        lockedHtml = locked
+          .map(
+            (e) =>
+              `<div class="make-row done" data-recipe="${e.id}" data-tip="recipe">${W(e.icon)}<span class="row-text"><b>🔒 ${e.name}</b><small>${e.unlockHint ?? `Explora y construye en la isla para inspirar este plano`}</small></span></div>`
+          )
+          .join(``)
+      ;((e.innerHTML = unlockedHtml + lockedHtml),
         e
           .querySelectorAll(`.make`)
           .forEach((e) =>
@@ -5803,9 +5840,15 @@ var xn = 34,
             { duration: 520, easing: `ease-out` }
           )
       }
-      ;(e === `bench` || e === `bonfire`) &&
+      ;(e === `bench` ||
+        e === `bonfire` ||
+        e === `seat` ||
+        e === `lantern` ||
+        e === `planter` ||
+        e === `crab_trap`) &&
         window.setTimeout(() => {
-          ;(this.panel === `pack` && this.close(), this.handlers.onTool(e))
+          ;((this.panel === `pack` || this.panel === `crafting`) && this.close(),
+            this.handlers.onTool(e))
         }, 750)
     }
     short4(e) {
@@ -5843,10 +5886,11 @@ var xn = 34,
           : n > 0
             ? `Tienes <b>${this.inv.wood}</b> de madera`
             : `Tala palmeras con el hacha para conseguir madera`))
-      let i = this.makeable(`bench`)
-      ;((e.querySelector(`.bench-side`).hidden = !i.length),
-        e.classList.toggle(`wide`, i.length > 0),
-        this.renderMakeList(e.querySelector(`.bench-list`), i))
+      let i = this.makeable(`bench`),
+        locked = this.lockedBlueprints(`bench`)
+      ;((e.querySelector(`.bench-side`).hidden = !(i.length || locked.length)),
+        e.classList.toggle(`wide`, i.length > 0 || locked.length > 0),
+        this.renderMakeList(e.querySelector(`.bench-list`), i, locked))
     }
     crafted() {
       let e = this.crafting.querySelector(`.recipe .item:last-child img`)
@@ -6217,7 +6261,13 @@ var xn = 34,
   }
 function An(e, t) {
   let n =
-    e.tool === `build` || e.tool === `bench` || e.tool === `bonfire`
+    e.tool === `build` ||
+    e.tool === `bench` ||
+    e.tool === `bonfire` ||
+    e.tool === `seat` ||
+    e.tool === `lantern` ||
+    e.tool === `planter` ||
+    e.tool === `crab_trap`
       ? `<span class="badge">0</span>`
       : ``
   return `<button class="slot ${t}" data-tool="${e.tool}" data-tip="slot" aria-label="${e.name}" aria-pressed="false">${W(e.icon)}<span class="num"></span><span class="name">${e.name}</span>${n}</button>`
@@ -6285,18 +6335,25 @@ var Fn = class {
     blueprints = new Set()
     caught = !1
     earned = !1
+    shoreFindsCount = 0
     log = new Map()
     catch(e) {
       let t = !this.caught
       return ((this.caught = !0), this.log.set(e, (this.log.get(e) ?? 0) + 1), t)
     }
+    get totalCaught() {
+      let n = 0
+      for (let v of this.log.values()) n += v
+      return n
+    }
     load(e) {
       ;(this.blueprints.clear(),
         this.log.clear(),
         (this.caught = e?.caught === !0),
-        (this.earned = e?.earned === !0))
+        (this.earned = e?.earned === !0),
+        (this.shoreFindsCount = typeof e?.shoreFindsCount == `number` ? e.shoreFindsCount : 0))
       for (let t of Array.isArray(e?.blueprints) ? e.blueprints : [])
-        t === `bonfire` && this.blueprints.add(t)
+        typeof t == `string` && this.blueprints.add(t)
       for (let t of Array.isArray(e?.log) ? e.log : [])
         Array.isArray(t) &&
           je(t[0]) &&
@@ -6309,6 +6366,7 @@ var Fn = class {
         ...(this.blueprints.size ? { blueprints: [...this.blueprints] } : {}),
         ...(this.caught ? { caught: !0 } : {}),
         ...(this.earned ? { earned: !0 } : {}),
+        ...(this.shoreFindsCount > 0 ? { shoreFindsCount: this.shoreFindsCount } : {}),
         ...(this.log.size ? { log: [...this.log] } : {}),
       }
     }
@@ -6394,6 +6452,14 @@ function zn() {
         (l.rocks = a.rocks.filter((e) => Array.isArray(e) && e.length === 3 && e.every(n))),
       Array.isArray(a.bonfires) &&
         (l.bonfires = a.bonfires.filter((e) => Array.isArray(e) && e.length === 3 && e.every(n))),
+      Array.isArray(a.seats) &&
+        (l.seats = a.seats.filter((e) => Array.isArray(e) && e.length === 3 && e.every(n))),
+      Array.isArray(a.lanterns) &&
+        (l.lanterns = a.lanterns.filter((e) => Array.isArray(e) && e.length === 3 && e.every(n))),
+      Array.isArray(a.planters) &&
+        (l.planters = a.planters.filter((e) => Array.isArray(e) && e.length === 3 && e.every(n))),
+      Array.isArray(a.crabTraps) &&
+        (l.crabTraps = a.crabTraps.filter((e) => Array.isArray(e) && e.length === 3 && e.every(n))),
       a.fisherman && typeof a.fisherman == `object` && (l.fisherman = a.fisherman),
       c && typeof c == `object` && (l.inventory = c))
     let u = l.camera,
@@ -6565,6 +6631,10 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
     quarry
     fishing
     bonfires
+    seats
+    lanterns
+    planters
+    crabTraps
     fisherman
     soldToday = !1
     orderTold = -1
@@ -6673,11 +6743,52 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
           this.sound
         )),
         this.scene.add(this.bonfires.group),
+        (this.seats = new SeatPlacer(
+          this.island,
+          this.grid,
+          this.inventory,
+          this.rig,
+          this.particles,
+          this.sound
+        )),
+        this.scene.add(this.seats.group),
+        (this.lanterns = new LanternPlacer(
+          this.island,
+          this.grid,
+          this.inventory,
+          this.rig,
+          this.particles,
+          this.sound
+        )),
+        this.scene.add(this.lanterns.group),
+        (this.planters = new PlanterPlacer(
+          this.island,
+          this.grid,
+          this.inventory,
+          this.rig,
+          this.particles,
+          this.sound
+        )),
+        this.scene.add(this.planters.group),
+        (this.crabTraps = new CrabTrapPlacer(
+          this.island,
+          this.grid,
+          this.inventory,
+          this.rig,
+          this.particles,
+          this.sound
+        )),
+        this.scene.add(this.crabTraps.group),
         (this.finds = new Re(this.island, this.rig, this.particles)),
         this.scene.add(this.finds.group),
         (this.inventory.placed = () => this.grid.size + this.builder.pending),
         (this.builder.budget = () => this.inventory.blocks),
-        this.grid.onChange(() => this.inventory.changed()),
+        this.grid.onChange(() => {
+          ;(this.inventory.changed(),
+            this.seats.setGround(),
+            this.lanterns.setGround(),
+            this.planters.setGround())
+        }),
         (this.rig.bounds = { x: 0.5, z: -0.5, r: 14 }))
       let n = () => this.builder.tool === `raise` || this.builder.tool === `dig`,
         r = () => this.builder.tool === `build` || this.builder.tool === `remove`
@@ -6767,6 +6878,10 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
         (this.fisherman.cookingKnown = () => this.story.blueprints.has(`bonfire`)),
         this.props.bench && this.benches.load(this.props.bench),
         this.bonfires.load(this.props.bonfire ?? Xn()),
+        this.seats.load(),
+        this.lanterns.load(),
+        this.planters.load(),
+        this.crabTraps.load(),
         this.builder.obstacles.push(...this.props.obstacles, ...this.palms.obstacles))
       let o = this.island.lighthouse
       this.contact.addStaticDisc(o.x, o.z, 1.72, 1)
@@ -6831,6 +6946,16 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
         r?.benches && this.benches.restore(r.benches),
         r?.rocks && this.quarry.restore(r.rocks),
         r?.bonfires && this.bonfires.restore(r.bonfires),
+        r?.seats && this.seats.restore(r.seats),
+        r?.lanterns && this.lanterns.restore(r.lanterns),
+        r?.planters && this.planters.restore(r.planters),
+        r?.crabTraps && this.crabTraps.restore(r.crabTraps),
+        this.grid.size >= 5 && this.story.blueprints.add(`seat`),
+        (this.grid.size >= 10 || this.story.shoreFindsCount >= 2) &&
+          this.story.blueprints.add(`lantern`),
+        (this.inventory.stone >= 4 || (this.inventory.has(`pickaxe`) && this.quarry.taken.size > 0)) &&
+          this.story.blueprints.add(`planter`),
+        this.story.totalCaught >= 2 && this.story.blueprints.add(`crab_trap`),
         this.fisherman.restore(r?.fisherman))
       let c = n ? [`axe`, `log`] : r ? (r.found ?? [`axe`, `log`]) : []
       ;(this.inventory.axe && !c.includes(`axe`) && c.push(`axe`),
@@ -6852,6 +6977,10 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
             story: this.story.toJSON(),
             rocks: this.quarry.toJSON(),
             bonfires: this.bonfires.toJSON(),
+            seats: this.seats.toJSON(),
+            lanterns: this.lanterns.toJSON(),
+            planters: this.planters.toJSON(),
+            crabTraps: this.crabTraps.toJSON(),
             fisherman: this.fisherman.toJSON(),
             hunger: this.hunger.toJSON(),
           }))),
@@ -6918,7 +7047,18 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
         this.setTool(this.inventory.blocks > 0 ? `build` : this.inventory.hasAxe ? `axe` : `hand`),
         (this.input.paused = () => !this.hud.isPlaying || this.hud.panelOpen),
         (this.builder.onPlace = () => {
-          ;(this.hud.placed(this.grid.size), this.pad.rumble(0.18, 40))
+          ;(this.hud.placed(this.grid.size),
+            this.pad.rumble(0.18, 40),
+            this.grid.size >= 5 &&
+              this.unlockBlueprint(
+                `seat`,
+                `¡Nuevo plano inspirado: Banco mirador! Constrúyelo en la mesa de trabajo`
+              ),
+            this.grid.size >= 10 &&
+              this.unlockBlueprint(
+                `lantern`,
+                `¡Nuevo plano inspirado: Farolillo marino! Ilumina tus muelles y caminos de noche`
+              ))
         }),
         (this.builder.onShort = () => {
           ;(this.hud.short(), this.pad.rumble(0.25, 60))
@@ -6953,6 +7093,11 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
           let bonus = 1 + getUpgradeLevel(`pickaxe_upgrade`)
           ;(this.hud.fly(`stone`, this.toScreen(e), 60, () => this.sound.pebble(t), bonus),
             this.inventory.addStone(bonus),
+            this.inventory.stone >= 4 &&
+              this.unlockBlueprint(
+                `planter`,
+                `¡Nuevo plano inspirado: Jardinera de bayas! Cultiva fruta fresca en tu isla`
+              ),
             this.hunger.work(1.2),
             this.pad.rumble(0.35, 70),
             this.autosave?.schedule())
@@ -6964,6 +7109,18 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
         (this.palms.onLog = (e, t) => this.collectLog(e, t)),
         (this.palms.onChange = () => this.autosave?.schedule()),
         (this.bonfires.onChange = () => {
+          ;(this.autosave?.schedule(), this.updateContact(), this.inventory.changed())
+        }),
+        (this.seats.onChange = () => {
+          ;(this.autosave?.schedule(), this.updateContact(), this.inventory.changed())
+        }),
+        (this.lanterns.onChange = () => {
+          ;(this.autosave?.schedule(), this.updateContact(), this.inventory.changed())
+        }),
+        (this.planters.onChange = () => {
+          ;(this.autosave?.schedule(), this.updateContact(), this.inventory.changed())
+        }),
+        (this.crabTraps.onChange = () => {
           ;(this.autosave?.schedule(), this.updateContact(), this.inventory.changed())
         }),
         (this.benches.onChange = () => {
@@ -7004,6 +7161,10 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
         this.builder.warmup(!0),
         this.benches.warmup(!0),
         this.bonfires.warmup(!0),
+        this.seats.warmup(!0),
+        this.lanterns.warmup(!0),
+        this.planters.warmup(!0),
+        this.crabTraps.warmup(!0),
         this.fishing.warmup(!0),
         this.fisherman.warmup(!0),
         this.quarry.warmup(!0))
@@ -7025,6 +7186,10 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
       ;(this.builder.warmup(!1),
         this.benches.warmup(!1),
         this.bonfires.warmup(!1),
+        this.seats.warmup(!1),
+        this.lanterns.warmup(!1),
+        this.planters.warmup(!1),
+        this.crabTraps.warmup(!1),
         this.fishing.warmup(!1),
         this.fisherman.warmup(!1),
         this.quarry.warmup(!1),
@@ -7111,6 +7276,38 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
           : ((this.cookingAt = o.index), this.hud.openCooking())
         return
       }
+      let seatHit = this.seats.count ? this.seats.pick(e.ndcX, e.ndcY) : null
+      if (seatHit && this.inFront(seatHit.t, e)) {
+        n === `remove` || t
+          ? this.seats.remove(seatHit.index)
+          : this.useSeat(seatHit.index, seatHit.anchor)
+        return
+      }
+      let lanternHit = this.lanterns.count ? this.lanterns.pick(e.ndcX, e.ndcY) : null
+      if (lanternHit && this.inFront(lanternHit.t, e)) {
+        if (n === `remove` || t) this.lanterns.remove(lanternHit.index)
+        else {
+          let c = this.lanterns.cycleColor(lanternHit.index)
+          c &&
+            (this.sound.ui(),
+            this.hud.toast(`Farolillo cambiado a: ${c.name}`, `lantern`, 2400))
+        }
+        return
+      }
+      let planterHit = this.planters.count ? this.planters.pick(e.ndcX, e.ndcY) : null
+      if (planterHit && this.inFront(planterHit.t, e)) {
+        n === `remove` || t
+          ? this.planters.remove(planterHit.index)
+          : this.usePlanter(planterHit.index, planterHit.anchor)
+        return
+      }
+      let trapHit = this.crabTraps.count ? this.crabTraps.pick(e.ndcX, e.ndcY) : null
+      if (trapHit && this.inFront(trapHit.t, e)) {
+        n === `remove` || t
+          ? this.crabTraps.remove(trapHit.index)
+          : this.useCrabTrap(trapHit.index, trapHit.anchor)
+        return
+      }
       switch (n) {
         case `hand`: {
           let boatHit = this.boat ? this.boat.pick(e.ndcX, e.ndcY, this.rig) : null
@@ -7176,6 +7373,78 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
               }))
           return
         }
+        case `seat`: {
+          let t = this.seats.place(e)
+          t === `poor`
+            ? this.hud.poor(`seat`)
+            : t === `placed` &&
+              (this.hud.toast(
+                `Banco mirador colocado — tócalo para descansar y admirar la isla`,
+                `seat`,
+                3600
+              ),
+              this.pad.rumble(0.4, 100),
+              this.later(0.35, () => {
+                this.builder.tool === `seat` &&
+                  this.inventory.seatCount < 1 &&
+                  this.setTool(`hand`)
+              }))
+          return
+        }
+        case `lantern`: {
+          let t = this.lanterns.place(e)
+          t === `poor`
+            ? this.hud.poor(`lantern`)
+            : t === `placed` &&
+              (this.hud.toast(
+                `Farolillo marino colocado — ilumina la noche y tócalo para cambiar su color`,
+                `lantern`,
+                3600
+              ),
+              this.pad.rumble(0.4, 100),
+              this.later(0.35, () => {
+                this.builder.tool === `lantern` &&
+                  this.inventory.lanternCount < 1 &&
+                  this.setTool(`hand`)
+              }))
+          return
+        }
+        case `planter`: {
+          let t = this.planters.place(e)
+          t === `poor`
+            ? this.hud.poor(`planter`)
+            : t === `placed` &&
+              (this.hud.toast(
+                `Jardinera plantada — dará bayas dulces y ramitas cada medio minuto`,
+                `planter`,
+                3600
+              ),
+              this.pad.rumble(0.4, 100),
+              this.later(0.35, () => {
+                this.builder.tool === `planter` &&
+                  this.inventory.planterCount < 1 &&
+                  this.setTool(`hand`)
+              }))
+          return
+        }
+        case `crab_trap`: {
+          let t = this.crabTraps.place(e)
+          t === `poor`
+            ? this.hud.poor(`crab_trap`)
+            : t === `placed` &&
+              (this.hud.toast(
+                `Trampa de cangrejos calada — revísala cuando salten chispas en la boya`,
+                `crab_trap`,
+                3800
+              ),
+              this.pad.rumble(0.4, 100),
+              this.later(0.35, () => {
+                this.builder.tool === `crab_trap` &&
+                  this.inventory.crabTrapCount < 1 &&
+                  this.setTool(`hand`)
+              }))
+          return
+        }
         case `raise`:
         case `dig`:
           this.terraformer.act(e, t)
@@ -7237,11 +7506,19 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
       let t = this.builder.tool,
         n = e && this.benches.count ? this.benches.pick(e.ndcX, e.ndcY) : null,
         r = e && this.bonfires.count ? this.bonfires.pick(e.ndcX, e.ndcY) : null,
+        seatHit = e && this.seats.count ? this.seats.pick(e.ndcX, e.ndcY) : null,
+        lanternHit = e && this.lanterns.count ? this.lanterns.pick(e.ndcX, e.ndcY) : null,
+        planterHit = e && this.planters.count ? this.planters.pick(e.ndcX, e.ndcY) : null,
+        trapHit = e && this.crabTraps.count ? this.crabTraps.pick(e.ndcX, e.ndcY) : null,
         i = e && this.finds.any ? this.finds.pick(e.ndcX, e.ndcY) : null,
         a =
           !!e &&
           ((!!n && this.inFront(n.t, e)) ||
             (!!r && this.inFront(r.t, e)) ||
+            (!!seatHit && this.inFront(seatHit.t, e)) ||
+            (!!lanternHit && this.inFront(lanternHit.t, e)) ||
+            (!!planterHit && this.inFront(planterHit.t, e)) ||
+            (!!trapHit && this.inFront(trapHit.t, e)) ||
             (!!i && this.inFront(i.t, e)))
       ;(this.builder.setHover((t === `build` || t === `remove`) && !a ? e : null),
         this.terraformer.setHover((t === `raise` || t === `dig`) && !a ? e : null),
@@ -7249,7 +7526,11 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
         this.quarry.setHover(t === `pickaxe` ? e : null),
         this.fishing.setAim(t === `rod` ? e : null),
         this.benches.setHover(t === `bench` && !a ? e : null),
-        this.bonfires.setHover(t === `bonfire` && !a ? e : null))
+        this.bonfires.setHover(t === `bonfire` && !a ? e : null),
+        this.seats.setHover(t === `seat` && !a ? e : null),
+        this.lanterns.setHover(t === `lantern` && !a ? e : null),
+        this.planters.setHover(t === `planter` && !a ? e : null),
+        this.crabTraps.setHover(t === `crab_trap` && !a ? e : null))
     }
     updatePrompt() {
       let e = this.pointer
@@ -7262,6 +7543,10 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
         r = ``,
         i = this.benches.count ? this.benches.pick(e.ndcX, e.ndcY) : null,
         a = this.bonfires.count ? this.bonfires.pick(e.ndcX, e.ndcY) : null,
+        seatHit = this.seats.count ? this.seats.pick(e.ndcX, e.ndcY) : null,
+        lanternHit = this.lanterns.count ? this.lanterns.pick(e.ndcX, e.ndcY) : null,
+        planterHit = this.planters.count ? this.planters.pick(e.ndcX, e.ndcY) : null,
+        trapHit = this.crabTraps.count ? this.crabTraps.pick(e.ndcX, e.ndcY) : null,
         o = this.finds.any ? this.finds.pick(e.ndcX, e.ndcY) : null,
         s = t === `rod` ? this.fishing.bobberAt : null,
         c = this.fisherman.here ? this.fisherman.pick(e.ndcX, e.ndcY) : null
@@ -7275,6 +7560,26 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
         ((n = i.anchor), (r = t === `remove` ? `Recoger` : `Hacer bloques`))
       else if (a && this.inFront(a.t, e))
         ((n = a.anchor), (r = t === `remove` ? `Recoger` : `Cocinar`))
+      else if (seatHit && this.inFront(seatHit.t, e))
+        ((n = seatHit.anchor), (r = t === `remove` ? `Recoger` : `Descansar (+energía)`))
+      else if (lanternHit && this.inFront(lanternHit.t, e))
+        ((n = lanternHit.anchor), (r = t === `remove` ? `Recoger` : `Cambiar color de luz`))
+      else if (planterHit && this.inFront(planterHit.t, e))
+        ((n = planterHit.anchor),
+          (r =
+            t === `remove`
+              ? `Recoger`
+              : this.planters.isReady(planterHit.index)
+                ? `¡Cosechar bayas!`
+                : `Brotando bayas · ${Math.floor(this.planters.progress(planterHit.index) * 100)}%`))
+      else if (trapHit && this.inFront(trapHit.t, e))
+        ((n = trapHit.anchor),
+          (r =
+            t === `remove`
+              ? `Recoger`
+              : this.crabTraps.isReady(trapHit.index)
+                ? `¡Recoger captura!`
+                : `Trampa calada · ${Math.floor(this.crabTraps.progress(trapHit.index) * 100)}%`))
       else if (t === `hand`) {
         let boatHit = this.boat ? this.boat.pick(e.ndcX, e.ndcY, this.rig) : null,
           lhHit = this.pickLighthouse(e.ndcX, e.ndcY),
@@ -7304,6 +7609,21 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
       } else if (t === `bench`) {
         let e = this.benches.hoverSpot
         e?.valid && ((n = e.anchor), (r = `Colocar`))
+      } else if (t === `bonfire`) {
+        let e = this.bonfires.hoverSpot
+        e?.valid && ((n = e.anchor), (r = `Colocar`))
+      } else if (t === `seat`) {
+        let e = this.seats.hoverSpot
+        e?.valid && ((n = e.anchor), (r = `Colocar`))
+      } else if (t === `lantern`) {
+        let e = this.lanterns.hoverSpot
+        e?.valid && ((n = e.anchor), (r = `Colocar`))
+      } else if (t === `planter`) {
+        let e = this.planters.hoverSpot
+        e?.valid && ((n = e.anchor), (r = `Colocar`))
+      } else if (t === `crab_trap`) {
+        let e = this.crabTraps.hoverSpot
+        e?.valid && ((n = e.anchor), (r = `Calar trampa`))
       }
       if (!n) {
         this.hud.prompt(null)
@@ -7321,6 +7641,100 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
       }),
         this.inventory.addWood(1))
     }
+    unlockBlueprint(e, t) {
+      return this.story.blueprints.has(e)
+        ? !1
+        : (this.story.blueprints.add(e),
+          this.inventory.changed(),
+          this.autosave?.schedule(),
+          this.later(0.8, () => {
+            ;(this.sound.found(), this.hud.announce(t, e, 5600))
+          }),
+          !0)
+    }
+    recordShoreFind() {
+      ;(this.story.shoreFindsCount++,
+        this.story.shoreFindsCount >= 2 &&
+          this.unlockBlueprint(
+            `lantern`,
+            `¡Nuevo plano inspirado: Farolillo marino! Hazlo en la mesa de trabajo para iluminar la isla`
+          ))
+    }
+    useSeat(e, t) {
+      let pos = this.seats.position(e) ?? t
+      ;(this.sound.found(),
+        this.pad.rumble(0.18, 60),
+        this.hunger.eat(25),
+        this.particles.sparkles(pos.clone().setY(pos.y + 0.65), 6, new a(`#FFE3A0`)),
+        Object.assign(this.rig.goal, {
+          x: pos.x * 0.55,
+          z: pos.z * 0.55,
+          zoom: 0.86,
+          tilt: 0.06,
+        }),
+        this.rig.glide(1.5),
+        this.hud.toast(`Te sientas a contemplar la brisa del mar (+25 energía)`, `seat`, 3400))
+    }
+    usePlanter(e, t) {
+      if (!this.planters.isReady(e)) {
+        let pct = Math.floor(this.planters.progress(e) * 100)
+        ;(this.sound.tick(),
+          this.hud.toast(`Las bayas siguen madurando al sol (${pct}%)`, `planter`, 2400))
+        return
+      }
+      if (!this.planters.harvest(e)) return
+      let scr = this.toScreen(t)
+      ;(this.sound.eat(),
+        this.pad.rumble(0.25, 80),
+        this.hunger.eat(35),
+        this.hud.fly(`wood`, scr, 0, () => this.sound.collect(1), 2),
+        this.inventory.addWood(2),
+        this.hud.toast(
+          `¡Cosechaste bayas isleñas! +35 de energía y +2 de madera de poda`,
+          `planter`,
+          3600
+        ))
+    }
+    useCrabTrap(e, t) {
+      if (!this.crabTraps.isReady(e)) {
+        let pct = Math.floor(this.crabTraps.progress(e) * 100)
+        ;(this.sound.tick(),
+          this.hud.toast(`Trampa calada en la orilla · esperando captura (${pct}%)`, `crab_trap`, 2400))
+        return
+      }
+      if (!this.crabTraps.harvest(e)) return
+      let scr = this.toScreen(t),
+        pool = [`sardine`, `mackerel`, `snapper`],
+        fishId = pool[Math.floor(Math.random() * pool.length)],
+        hasRoom = this.inventory.roomFor(fishId)
+      ;(this.sound.caught(),
+        this.pad.rumble(0.3, 100),
+        (this.story.earned = !0),
+        this.hud.fly(`coins`, scr, 0, () => this.sound.coins(2), 15),
+        this.inventory.addCoins(15))
+      if (hasRoom) {
+        ;(this.hud.fly(`fish`, scr, 120, () => this.sound.collect(2), 1, `fish_${fishId}`),
+          this.inventory.addFish(fishId, !1, 1),
+          this.story.catch(fishId) && this.firstCatch(),
+          this.story.totalCaught >= 2 &&
+            this.unlockBlueprint(
+              `crab_trap`,
+              `¡Nuevo plano inspirado: Trampa de cangrejos! Constrúyela en la mesa de trabajo`
+            ),
+          this.hud.toast(
+            `¡La trampa atrapó botín costero! +15 monedas y 1 pez fresco`,
+            `crab_trap`,
+            3800
+          ))
+      } else {
+        this.hud.toast(
+          `¡Recogiste +15 monedas de la trampa! (Mochila llena para el pescado)`,
+          `crab_trap`,
+          3600
+        )
+      }
+      this.autosave?.schedule()
+    }
     found(e, t) {
       if ((this.autosave?.schedule(), e === `log`)) {
         let e = this.logObstacle ? this.builder.obstacles.indexOf(this.logObstacle) : -1
@@ -7332,7 +7746,8 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
       if (e === `driftwood`) {
         let scr = this.toScreen(t),
           woodAmt = 3 + Math.floor(Math.random() * 3)
-        ;(this.sound.collect(1),
+        ;(this.recordShoreFind(),
+          this.sound.collect(1),
           this.pad.rumble(0.2, 60),
           this.hud.fly(`wood`, scr, 0, () => this.sound.collect(2), woodAmt),
           this.inventory.addWood(woodAmt),
@@ -7347,25 +7762,37 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
       if (e === `shell`) {
         let scr = this.toScreen(t),
           coinsAmt = 15 + Math.floor(Math.random() * 16)
-        ;(this.sound.found(),
+        ;(this.recordShoreFind(),
+          this.sound.found(),
           this.pad.rumble(0.25, 80),
           (this.story.earned = !0),
           this.hud.fly(`coins`, scr, 0, () => this.sound.coins(2), coinsAmt),
           this.inventory.addCoins(coinsAmt),
           this.hud.fly(`stone`, scr, 110, void 0, 3),
           this.inventory.addStone(3),
+          this.inventory.stone >= 4 &&
+            this.unlockBlueprint(
+              `planter`,
+              `¡Nuevo plano inspirado: Jardinera de bayas! Cultiva fruta fresca en tu isla`
+            ),
           this.hud.toast(`¡Caracola brillante! +${coinsAmt} monedas antiguas y +3 piedras`, `coin`, 3600))
         return
       }
       if (e === `crate`) {
         let scr = this.toScreen(t)
-        ;(this.sound.found(),
+        ;(this.recordShoreFind(),
+          this.sound.found(),
           this.pad.rumble(0.35, 110),
           this.hud.fly(`wood`, scr, 0, () => this.sound.collect(2), 6),
           this.hud.fly(`stone`, scr, 90, void 0, 5),
           this.hud.fly(`blocks`, scr, 180, void 0, 12),
           this.inventory.addWood(6),
           this.inventory.addStone(5),
+          this.inventory.stone >= 4 &&
+            this.unlockBlueprint(
+              `planter`,
+              `¡Nuevo plano inspirado: Jardinera de bayas! Cultiva fruta fresca en tu isla`
+            ),
           (this.inventory.owned += 12),
           this.inventory.changed(),
           this.hud.toast(`¡Caja náufraga! +12 bloques, +6 de madera y +5 piedras`, `block`, 4200))
@@ -7374,7 +7801,8 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
       if (e === `bottle`) {
         let scr = this.toScreen(t),
           msg = BOTTLE_MESSAGES[Math.floor(Math.random() * BOTTLE_MESSAGES.length)]
-        ;(this.sound.found(),
+        ;(this.recordShoreFind(),
+          this.sound.found(),
           this.pad.rumble(0.3, 90),
           (this.story.earned = !0),
           this.hud.fly(`coins`, scr, 0, () => this.sound.coins(2), 20),
@@ -7418,6 +7846,7 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
         return
       }
       ;(this.boat.collectLoot(),
+        this.recordShoreFind(),
         this.sound.caught(),
         this.pad.rumble(0.35, 110),
         (this.story.earned = !0),
@@ -7523,6 +7952,11 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
             this.hud.toast(`¡Pesca doble gracias al cebo maestro! (×2 ${e.name})`, `fish_${e.id}`, 3200)
           ),
         this.story.catch(e.id) && this.firstCatch(),
+        this.story.totalCaught >= 2 &&
+          this.unlockBlueprint(
+            `crab_trap`,
+            `¡Nuevo plano inspirado: Trampa de cangrejos! Constrúyela en la mesa de trabajo`
+          ),
         this.autosave?.schedule())
     }
     firstCatch() {
@@ -7712,7 +8146,7 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
         (this.hunger.eat(Le(e, t)), this.sound.eat(), this.pad.rumble(0.2, 60))
     }
     get cold() {
-      return this.clock.phase === `night` && this.bonfires.count === 0
+      return this.clock.phase === `night` && this.bonfires.count === 0 && this.lanterns.count === 0
     }
     cookingAt = 0
     cook(e, t) {
@@ -7737,6 +8171,10 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
         blocks: e.blocks,
         benches: e.benchCount,
         bonfires: e.bonfireCount,
+        seats: e.seatCount,
+        lanterns: e.lanternCount,
+        planters: e.planterCount,
+        crabTraps: e.crabTrapCount,
         axe: e.hasAxe,
         pickaxe: e.has(`pickaxe`),
         rod: e.has(`rod`),
@@ -7954,6 +8392,10 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
         this.palms.setGround(),
         this.benches.setGround(),
         this.bonfires.setGround(),
+        this.seats.setGround(),
+        this.lanterns.setGround(),
+        this.planters.setGround(),
+        this.crabTraps.setGround(),
         this.finds.setGround(),
         this.updateContact())
     }
@@ -8071,7 +8513,13 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
         this.water.uniforms.uBoat2Shape.value.copy(this.fisherman.wake.shape),
         this.benches.update(e),
         this.bonfires.update(e),
-        this.time && (this.bonfires.night = this.time.nightness),
+        this.seats.update(e),
+        this.lanterns.update(e),
+        this.planters.update(e),
+        this.crabTraps.update(e),
+        this.time &&
+          ((this.bonfires.night = this.time.nightness),
+          (this.lanterns.night = this.time.nightness)),
         this.finds.update(e),
         this.clock.update(e),
         this.time?.update(),
@@ -8114,7 +8562,13 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
         n = (e, t) => (e + 2048) * 4096 + t + 2048
       for (let [r, i, a] of this.grid.entries())
         i === this.island.groundLevel(r, a) && (e.push([r, a]), t.add(n(r, a)))
-      for (let [r, i] of [...this.benches.cells(), ...this.bonfires.cells()])
+      for (let [r, i] of [
+        ...this.benches.cells(),
+        ...this.bonfires.cells(),
+        ...this.seats.cells(),
+        ...this.lanterns.cells(),
+        ...this.planters.cells(),
+      ])
         (e.push([r, i]), t.add(n(r, i)))
       ;(this.contact.update(e), this.foliage?.refresh((e, r) => t.has(n(e, r))))
     }

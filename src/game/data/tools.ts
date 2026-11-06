@@ -46,6 +46,34 @@ export const HOTBAR_ITEMS: ToolSlotDef[] = [
     tip: 'Colócala: cocina pescado y caliéntate por la noche',
     info: 'Colócala y cocina pescado en ella (el pescado a la brasa alimenta el triple). También te mantiene caliente por la noche.',
   },
+  {
+    tool: 'seat',
+    icon: 'seat',
+    name: 'Banco mirador',
+    tip: 'Colócalo en la isla o en tus terrazas — haz clic para descansar',
+    info: 'Un banco acogedor de madera. Colócalo sobre la hierba o encima de tus construcciones y haz clic en él para descansar, recuperar energía y contemplar el paisaje.',
+  },
+  {
+    tool: 'lantern',
+    icon: 'lantern',
+    name: 'Farolillo marino',
+    tip: 'Ilumina tus construcciones, da calor y cambia de color al tocarlo',
+    info: 'Una lámpara artesanal que ilumina tus puentes, muelles y terrazas. Mantiene el calor por la noche y puedes tocarla para alternar entre 4 colores de luz.',
+  },
+  {
+    tool: 'planter',
+    icon: 'planter',
+    name: 'Jardinera de bayas',
+    tip: 'Cultiva bayas dulces y brotes de madera periódicamente',
+    info: 'Colócala en tu jardín o terraza. Cada cierto tiempo florece con bayas isleñas que restauran tu energía al instante y dan brotes de madera.',
+  },
+  {
+    tool: 'crab_trap',
+    icon: 'crab_trap',
+    name: 'Trampa de cangrejos',
+    tip: 'Colócala en la orilla o agua baja para capturar peces y monedas',
+    info: 'Se cala en la arena húmeda o agua baja de la orilla. Captura pescado costero y monedas antiguas automáticamente mientras tú construyes.',
+  },
 ]
 
 /**

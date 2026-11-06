@@ -83,6 +83,20 @@ export const LIGHTHOUSE_LAMP_COLORS: LampColorPreset[] = [
   },
 ]
 
+export interface LanternColorPreset {
+  name: string
+  glassHex: string
+  glowHex: string
+}
+
+/** Colores disponibles al tocar un Farolillo marino colocado en la isla. */
+export const LANTERN_COLORS: LanternColorPreset[] = [
+  { name: 'Ámbar cálido', glassHex: '#FFE494', glowHex: '#FFB448' },
+  { name: 'Perla marina', glassHex: '#9CF8EC', glowHex: '#48E0CE' },
+  { name: 'Coral de ocaso', glassHex: '#FFB0C4', glowHex: '#FF6B92' },
+  { name: 'Estrella violeta', glassHex: '#D8B8FF', glowHex: '#A678FF' },
+]
+
 /** Posibles ubicaciones de playa alrededor de la isla donde la marea deja hallazgos. */
 export const SHORE_SPOTS: [number, number][] = [
   [-9.2, 6.8],
@@ -94,3 +108,4 @@ export const SHORE_SPOTS: [number, number][] = [
   [6.4, 8.1],
   [-2.4, 9.2],
 ]
+

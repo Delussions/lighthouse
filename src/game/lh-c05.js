@@ -115,6 +115,7 @@ import {
   getUpgradeLevel,
   SHORE_FINDS,
   SHORE_SPOTS,
+  LANTERN_COLORS,
 } from './data/index'
 var ot = class extends je {
   constructor(e) {
@@ -4663,6 +4664,10 @@ if (abs(aWing) > 0.5) {
     rod = !1
     benches = 0
     bonfires = 0
+    seats = 0
+    lanterns = 0
+    planters = 0
+    crabTraps = 0
     fish = new Map()
     pockets = 12
     creative = !1
@@ -4676,6 +4681,18 @@ if (abs(aWing) > 0.5) {
     }
     get bonfireCount() {
       return this.creative ? 1 / 0 : this.bonfires
+    }
+    get seatCount() {
+      return this.creative ? 1 / 0 : this.seats
+    }
+    get lanternCount() {
+      return this.creative ? 1 / 0 : this.lanterns
+    }
+    get planterCount() {
+      return this.creative ? 1 / 0 : this.planters
+    }
+    get crabTrapCount() {
+      return this.creative ? 1 / 0 : this.crabTraps
     }
     get hasAxe() {
       return this.creative || this.axe
@@ -4737,7 +4754,15 @@ if (abs(aWing) > 0.5) {
               ? (this.rod = !0)
               : e === `bench` && !this.creative
                 ? this.benches++
-                : e === `bonfire` && !this.creative && this.bonfires++,
+                : e === `bonfire` && !this.creative
+                  ? this.bonfires++
+                  : e === `seat` && !this.creative
+                    ? this.seats++
+                    : e === `lantern` && !this.creative
+                      ? this.lanterns++
+                      : e === `planter` && !this.creative
+                        ? this.planters++
+                        : e === `crab_trap` && !this.creative && this.crabTraps++,
           this.emit(),
           !0)
     }
@@ -4755,6 +4780,30 @@ if (abs(aWing) > 0.5) {
     }
     returnBonfire() {
       ;(this.creative || this.bonfires++, this.emit())
+    }
+    useSeat() {
+      return this.creative ? !0 : this.seats < 1 ? !1 : (this.seats--, this.emit(), !0)
+    }
+    returnSeat() {
+      ;(this.creative || this.seats++, this.emit())
+    }
+    useLantern() {
+      return this.creative ? !0 : this.lanterns < 1 ? !1 : (this.lanterns--, this.emit(), !0)
+    }
+    returnLantern() {
+      ;(this.creative || this.lanterns++, this.emit())
+    }
+    usePlanter() {
+      return this.creative ? !0 : this.planters < 1 ? !1 : (this.planters--, this.emit(), !0)
+    }
+    returnPlanter() {
+      ;(this.creative || this.planters++, this.emit())
+    }
+    useCrabTrap() {
+      return this.creative ? !0 : this.crabTraps < 1 ? !1 : (this.crabTraps--, this.emit(), !0)
+    }
+    returnCrabTrap() {
+      ;(this.creative || this.crabTraps++, this.emit())
     }
     fishCount(e, t) {
       let n = this.fish.get(e)
@@ -4800,7 +4849,11 @@ if (abs(aWing) > 0.5) {
         +!!this.rod +
         +(this.blocks > 0) +
         +(this.benches > 0) +
-        +(this.bonfires > 0)
+        +(this.bonfires > 0) +
+        +(this.seats > 0) +
+        +(this.lanterns > 0) +
+        +(this.planters > 0) +
+        +(this.crabTraps > 0)
       for (let t of this.fish.values()) e += +!!t.raw + +!!t.cooked
       return e
     }
@@ -4829,6 +4882,10 @@ if (abs(aWing) > 0.5) {
           (this.rod = e.rod === !0),
           (this.benches = r(e.benches) ? Math.floor(e.benches) : 0),
           (this.bonfires = r(e.bonfires) ? Math.floor(e.bonfires) : 0),
+          (this.seats = r(e.seats) ? Math.floor(e.seats) : 0),
+          (this.lanterns = r(e.lanterns) ? Math.floor(e.lanterns) : 0),
+          (this.planters = r(e.planters) ? Math.floor(e.planters) : 0),
+          (this.crabTraps = r(e.crabTraps) ? Math.floor(e.crabTraps) : 0),
           (this.pockets = Math.max(
             12 + getUpgradeLevel(`pack_upgrade`) * 4,
             r(e.pockets, 12) ? Math.floor(e.pockets) : 12
@@ -4851,6 +4908,10 @@ if (abs(aWing) > 0.5) {
           (this.rod = !1),
           (this.benches = 0),
           (this.bonfires = 0),
+          (this.seats = 0),
+          (this.lanterns = 0),
+          (this.planters = 0),
+          (this.crabTraps = 0),
           (this.pockets = 12))
       this.emit()
     }
@@ -4866,6 +4927,10 @@ if (abs(aWing) > 0.5) {
         ...(this.rod ? { rod: !0 } : {}),
         benches: this.benches,
         ...(this.bonfires ? { bonfires: this.bonfires } : {}),
+        ...(this.seats ? { seats: this.seats } : {}),
+        ...(this.lanterns ? { lanterns: this.lanterns } : {}),
+        ...(this.planters ? { planters: this.planters } : {}),
+        ...(this.crabTraps ? { crabTraps: this.crabTraps } : {}),
         ...(e.length ? { fish: e } : {}),
         ...(this.pockets === 12 ? {} : { pockets: this.pockets }),
         ...(this.creative ? { creative: !0 } : {}),
@@ -6284,20 +6349,37 @@ var mi = 0.2,
     setHover(e) {
       this.spot = e ? this.spotAt(e) : null
     }
+    topBlock(e, t) {
+      if (!this.kind.allowDeck) return -1
+      for (let n = 15; n >= 0; n--) if (this.grid.has(e, n, t)) return n
+      return -1
+    }
+    surfaceY(e, t) {
+      let n = this.topBlock(e, t)
+      if (n >= 0) return 1.25 + n
+      let r = this.island.height(e + 0.5, t + 0.5)
+      return this.kind.allowShore ? Math.max(r, -0.06) : r
+    }
     spotAt(e) {
       let t = this.rig.rayFrom(e.ndcX, e.ndcY),
         n = this.island.raycast(t.origin, t.direction, 500, !0)
-      if (!n || n.water) return null
+      if (!n || (n.water && !this.kind.allowShore)) return null
       let r = Math.floor(n.x),
         i = Math.floor(n.z),
-        a = this.island.groundLevel(r, i)
-      if (a === null) return null
-      let o =
-          !this.island.isReserved(r, i) &&
-          !this.grid.has(r, a, i) &&
-          this.island.landSdf(r + 0.5, i + 0.5) < -0.1,
+        a = this.island.groundLevel(r, i),
+        top = this.topBlock(r, i),
+        sdf = this.island.landSdf(r + 0.5, i + 0.5)
+      if (!this.kind.allowShore && a === null && top < 0) return null
+      let o = this.kind.allowShore
+          ? !this.island.isReserved(r, i) &&
+            top < 0 &&
+            sdf > -1.3 &&
+            sdf < 1.9 &&
+            this.island.height(r + 0.5, i + 0.5) > -0.55
+          : !this.island.isReserved(r, i) &&
+            (top >= 0 || (a !== null && !this.grid.has(r, a, i) && sdf < -0.1)),
         s = o && this.kind.count() < 1
-      return { cx: r, cz: i, y: this.island.height(r + 0.5, i + 0.5), valid: o && !s, poor: s }
+      return { cx: r, cz: i, y: this.surfaceY(r, i), valid: o && !s, poor: s }
     }
     place(e) {
       let t = this.spotAt(e)
@@ -6317,13 +6399,14 @@ var mi = 0.2,
     add(e, t, n, r) {
       if (!this.model) return
       let i = this.model.clone(!0),
-        a = this.island.height(e + 0.5, t + 0.5)
+        a = this.surfaceY(e, t),
+        o = { cx: e, cz: t, facing: n, mesh: i, y: a, anim: r ? `drop` : null, t: 0 }
       ;(i.position.set(e + 0.5, a + (r ? 0.9 : 0), t + 0.5),
         (i.rotation.y = (Math.PI / 2) * n),
-        this.kind.decorate?.(i),
+        this.kind.decorate?.(i, o),
         this.group.add(i),
         this.island.reserve(e, t),
-        this.list.push({ cx: e, cz: t, facing: n, mesh: i, y: a, anim: r ? `drop` : null, t: 0 }))
+        this.list.push(o))
     }
     pick(e, t) {
       let n = this.rig.rayFrom(e, t),
@@ -6368,7 +6451,7 @@ var mi = 0.2,
       for (let e = 0; e < this.list.length; e++) this.remove(e)
     }
     setGround() {
-      for (let e of this.list) e.y = this.island.height(e.cx + 0.5, e.cz + 0.5)
+      for (let e of this.list) e.y = this.surfaceY(e.cx, e.cz)
     }
     toJSON() {
       return this.list.filter((e) => e.anim !== `pop`).map((e) => [e.cx, e.cz, e.facing])
@@ -6376,7 +6459,9 @@ var mi = 0.2,
     restore(e) {
       for (let [t, n, r] of e)
         this.island.isReserved(t, n) ||
-          this.island.groundLevel(t, n) === null ||
+          (!this.kind.allowShore &&
+            this.island.groundLevel(t, n) === null &&
+            this.topBlock(t, n) < 0) ||
           this.add(t, n, ((r % 4) + 4) % 4, !1)
     }
     update(e) {
@@ -6824,6 +6909,320 @@ function ki() {
       }`,
   })
 }
+var Hi = class extends vi {
+    constructor(e, t, n, r, i, a) {
+      super(
+        {
+          node: `Seat`,
+          height: 0.72,
+          allowDeck: !0,
+          count: () => n.seatCount,
+          use: () => n.useSeat(),
+          give: () => n.returnSeat(),
+          land: () => a.bench(),
+        },
+        e,
+        t,
+        r,
+        i,
+        a
+      )
+      this.load(this.buildModel())
+    }
+    buildModel() {
+      let e = new D()
+      e.name = `Seat`
+      let t = new R({ color: `#8E5B3A`, roughness: 0.85 }),
+        n = new R({ color: `#DF9F60`, roughness: 0.78 }),
+        r = new R({ color: `#C9894C`, roughness: 0.8 }),
+        a = new i(new se(0.11, 0.34, 0.42), t),
+        o = new i(new se(0.11, 0.34, 0.42), t)
+      ;((a.position.set(-0.32, 0.17, 0)), (o.position.set(0.32, 0.17, 0)))
+      let s = new i(new se(0.82, 0.08, 0.44), n)
+      s.position.set(0, 0.34, 0.02)
+      let c = new i(new se(0.8, 0.14, 0.08), r),
+        l = new i(new se(0.8, 0.12, 0.08), n)
+      ;((c.position.set(0, 0.48, -0.15)), (l.position.set(0, 0.63, -0.17)))
+      let u = new i(new se(0.1, 0.14, 0.42), t),
+        d = new i(new se(0.1, 0.14, 0.42), t)
+      return (
+        (u.position.set(-0.34, 0.43, 0)),
+        (d.position.set(0.34, 0.43, 0)),
+        e.add(a, o, s, c, l, u, d),
+        e
+      )
+    }
+  },
+  Ui = class extends vi {
+    sparkTimer = 0.8
+    constructor(e, t, n, r, i, a) {
+      super(
+        {
+          node: `Lantern`,
+          height: 1.15,
+          allowDeck: !0,
+          count: () => n.lanternCount,
+          use: () => n.useLantern(),
+          give: () => n.returnLantern(),
+          land: () => a.whoomph(),
+          decorate: (e, t) => this.setupLantern(e, t),
+        },
+        e,
+        t,
+        r,
+        i,
+        a
+      )
+      this.load(this.buildModel())
+    }
+    buildModel() {
+      let e = new D()
+      e.name = `Lantern`
+      let t = new R({ color: `#A8A298`, roughness: 0.9 }),
+        n = new R({ color: `#7B5032`, roughness: 0.85 }),
+        r = new R({ color: `#433A34`, roughness: 0.65 }),
+        a = new R({
+          color: `#FFE494`,
+          emissive: new p(`#FFB448`),
+          emissiveIntensity: 2.2,
+          roughness: 0.25,
+        })
+      a.name = `Lantern_Glass`
+      let o = new i(new de(0.2, 0.24, 0.14, 10), t)
+      o.position.y = 0.07
+      let s = new i(new de(0.06, 0.075, 0.84, 8), n)
+      s.position.y = 0.52
+      let c = new i(new de(0.18, 0.06, 0.1, 8), r)
+      c.position.y = 0.98
+      let l = new i(new de(0.13, 0.11, 0.24, 10), a)
+      l.position.y = 0.84
+      let u = new i(new de(0.14, 0.14, 0.05, 8), r)
+      return ((u.position.y = 0.71), e.add(o, s, c, l, u), e)
+    }
+    setupLantern(e, t) {
+      t.colorIdx = 0
+      let n = null
+      e.traverse((e) => {
+        if (e.isMesh && e.material?.name === `Lantern_Glass`) {
+          n = e.material.clone()
+          e.material = n
+        }
+      })
+      t.glassMat = n
+      let r = new i(new he(1.25, 24).rotateX(-Math.PI / 2), ki())
+      ;((r.position.set(0, 0.03, 0)), (r.renderOrder = 5), e.add(r))
+    }
+    cycleColor(e) {
+      let t = this.list[e]
+      if (!t) return null
+      t.colorIdx = ((t.colorIdx ?? 0) + 1) % LANTERN_COLORS.length
+      let n = LANTERN_COLORS[t.colorIdx]
+      if (t.glassMat) {
+        ;(t.glassMat.color.set(n.glassHex), t.glassMat.emissive.set(n.glowHex))
+      }
+      let r = new M(t.cx + 0.5, t.y + 0.9, t.cz + 0.5)
+      return (this.fx.sparkles(r, 8, new p(n.glassHex)), n)
+    }
+    update(e) {
+      super.update(e)
+      this.sparkTimer -= e
+      if (this.sparkTimer <= 0 && this.list.length) {
+        this.sparkTimer = 0.9 + Math.random() * 0.9
+        let e = this.list[Math.floor(Math.random() * this.list.length)]
+        if (e && e.anim !== `pop`) {
+          let t = LANTERN_COLORS[e.colorIdx ?? 0]
+          this.fx.sparkles(
+            new M(e.cx + 0.5, e.y + 0.92, e.cz + 0.5),
+            1,
+            new p(t?.glassHex ?? `#FFE494`)
+          )
+        }
+      }
+    }
+  },
+  Wi = class extends vi {
+    glintTimer = 1.4
+    constructor(e, t, n, r, i, a) {
+      super(
+        {
+          node: `Planter`,
+          height: 0.82,
+          allowDeck: !0,
+          count: () => n.planterCount,
+          use: () => n.usePlanter(),
+          give: () => n.returnPlanter(),
+          land: () => a.bench(),
+          decorate: (e, t) => this.setupPlanter(e, t),
+        },
+        e,
+        t,
+        r,
+        i,
+        a
+      )
+      this.load(this.buildModel())
+    }
+    buildModel() {
+      let e = new D()
+      e.name = `Planter`
+      let t = new R({ color: `#B87842`, roughness: 0.85 }),
+        n = new R({ color: `#6E482A`, roughness: 0.95 }),
+        r = new R({ color: `#58B847`, roughness: 0.8 }),
+        a = new R({ color: `#72CF5E`, roughness: 0.78 }),
+        o = new R({ color: `#FF5964`, roughness: 0.4 }),
+        s = new R({ color: `#FFC43D`, roughness: 0.4 }),
+        c = new i(new se(0.76, 0.34, 0.76), t),
+        l = new i(new se(0.66, 0.08, 0.66), n)
+      ;((c.position.y = 0.17), (l.position.y = 0.32))
+      let u = new i(new Fe(0.24, 12, 10), r),
+        d = new i(new Fe(0.2, 12, 10), a),
+        f = new i(new Fe(0.19, 10, 8), r)
+      ;((u.position.set(-0.08, 0.48, 0.04)),
+        (d.position.set(0.1, 0.54, -0.05)),
+        (f.position.set(0.04, 0.45, 0.12)))
+      let m = new D()
+      m.name = `Berries`
+      ;[
+        [-0.16, 0.56, 0.14, o],
+        [0.14, 0.64, 0.04, s],
+        [0.02, 0.58, -0.16, o],
+        [0.18, 0.49, 0.16, o],
+        [-0.06, 0.66, -0.02, s],
+      ].forEach(([e, t, n, r]) => {
+        let a = new i(new Fe(0.068, 8, 8), r)
+        ;(a.position.set(e, t, n), m.add(a))
+      })
+      return (e.add(c, l, u, d, f, m), e)
+    }
+    setupPlanter(e, t) {
+      t.growTimer = 22
+      t.berries = e.getObjectByName(`Berries`) ?? null
+    }
+    isReady(e) {
+      let t = this.list[e]
+      return !!t && (t.growTimer ?? 0) >= 30
+    }
+    progress(e) {
+      let t = this.list[e]
+      return t ? Math.min(100, Math.floor(((t.growTimer ?? 0) / 30) * 100)) : 0
+    }
+    harvest(e) {
+      let t = this.list[e]
+      if (!t || (t.growTimer ?? 0) < 30) return null
+      t.growTimer = 0
+      t.berries && t.berries.scale.setScalar(0.01)
+      let n = new M(t.cx + 0.5, t.y + 0.6, t.cz + 0.5)
+      return (
+        this.fx.sparkles(n, 10, new p(`#FFE066`)),
+        this.fx.dust(n, 0.4, 8, new p(`#72CF5E`)),
+        n
+      )
+    }
+    update(e) {
+      super.update(e)
+      this.glintTimer -= e
+      let t = this.glintTimer <= 0
+      t && (this.glintTimer = 1.6 + Math.random())
+      for (let n of this.list) {
+        if (n.anim === `pop`) continue
+        n.growTimer = Math.min(30, (n.growTimer ?? 0) + e)
+        let r = Math.min(1, n.growTimer / 30)
+        n.berries && n.berries.scale.setScalar(Math.max(0.01, r))
+        t &&
+          r >= 1 &&
+          this.fx.sparkles(
+            new M(n.cx + 0.5, n.y + 0.68, n.cz + 0.5),
+            2,
+            new p(`#FFE066`)
+          )
+      }
+    }
+  },
+  Gi = class extends vi {
+    glintTimer = 1.3
+    constructor(e, t, n, r, i, a) {
+      super(
+        {
+          node: `CrabTrap`,
+          height: 0.72,
+          allowShore: !0,
+          count: () => n.crabTrapCount,
+          use: () => n.useCrabTrap(),
+          give: () => n.returnCrabTrap(),
+          land: () => a.plop(!1),
+          decorate: (e, t) => this.setupTrap(e, t),
+        },
+        e,
+        t,
+        r,
+        i,
+        a
+      )
+      this.load(this.buildModel())
+    }
+    buildModel() {
+      let e = new D()
+      e.name = `CrabTrap`
+      let t = new R({ color: `#C88B52`, roughness: 0.82 }),
+        n = new R({ color: `#7A4E28`, roughness: 0.88 }),
+        r = new R({ color: `#E85A4F`, roughness: 0.5 }),
+        a = new R({ color: `#FFF8EC`, roughness: 0.5 }),
+        o = new i(new se(0.68, 0.34, 0.52), t),
+        s = new i(new se(0.72, 0.06, 0.56), n)
+      ;((o.position.y = 0.17), (s.position.y = 0.34))
+      let c = new D()
+      c.name = `Buoy`
+      let l = new i(new Fe(0.11, 10, 8), r),
+        u = new i(new de(0.115, 0.115, 0.05, 10), a)
+      return ((c.position.y = 0.55), c.add(l, u), e.add(o, s, c), e)
+    }
+    setupTrap(e, t) {
+      t.catchTimer = 25
+      t.buoy = e.getObjectByName(`Buoy`) ?? null
+    }
+    isReady(e) {
+      let t = this.list[e]
+      return !!t && (t.catchTimer ?? 0) >= 35
+    }
+    progress(e) {
+      let t = this.list[e]
+      return t ? Math.min(100, Math.floor(((t.catchTimer ?? 0) / 35) * 100)) : 0
+    }
+    collect(e) {
+      let t = this.list[e]
+      if (!t || (t.catchTimer ?? 0) < 35) return null
+      t.catchTimer = 0
+      let n = new M(t.cx + 0.5, t.y + 0.55, t.cz + 0.5)
+      return (
+        this.fx.splash(n.clone().setY(Math.max(0, t.y)), new p(`#E6FBF4`)),
+        this.fx.sparkles(n, 10, new p(`#64E8D8`)),
+        n
+      )
+    }
+    update(e) {
+      super.update(e)
+      this.glintTimer -= e
+      let t = this.glintTimer <= 0
+      t && (this.glintTimer = 1.5 + Math.random())
+      let n = performance.now() * 0.004
+      for (let r of this.list) {
+        if (r.anim === `pop`) continue
+        r.catchTimer = Math.min(35, (r.catchTimer ?? 0) + e)
+        let i = r.catchTimer >= 35
+        r.buoy &&
+          ((r.buoy.position.y =
+            0.55 + Math.sin(n * (i ? 3.2 : 1.2) + r.cx) * (i ? 0.08 : 0.03)),
+          r.buoy.scale.setScalar(i ? 1.18 : 0.95))
+        t &&
+          i &&
+          this.fx.sparkles(
+            new M(r.cx + 0.5, r.y + 0.62, r.cz + 0.5),
+            2,
+            new p(`#64E8D8`)
+          )
+      }
+    }
+  }
 var Ai = 8,
   ji = 17.5,
   Mi = 0.35,
@@ -7197,4 +7596,8 @@ export {
   Y as w,
   Yn as x,
   ir as y,
+  Hi as SeatPlacer,
+  Ui as LanternPlacer,
+  Wi as PlanterPlacer,
+  Gi as CrabTrapPlacer,
 }

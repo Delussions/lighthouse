@@ -32,11 +32,12 @@ El proyecto corre localmente con **Vite + React + TypeScript + Three.js** (`npm 
   - **[recipes.ts](file:///x:/Archivos%20de%20sistema/Escritorio/lighthouse/src/game/data/recipes.ts)**: Recetas de fabricación a mano (`hand`) y en mesa de trabajo (`bench`).
   - **[tools.ts](file:///x:/Archivos%20de%20sistema/Escritorio/lighthouse/src/game/data/tools.ts)**: Herramientas y objetos colocables de la barra rápida (`HOTBAR_ITEMS`, `TERRAFORM_TOOLS`).
   - **[upgrades.ts](file:///x:/Archivos%20de%20sistema/Escritorio/lighthouse/src/game/data/upgrades.ts)**: Mejoras de herramientas, ampliación de mochila y suministros en la tienda de Gil (`GIL_UPGRADES`), persistidos en `localStorage` (`lighthouse.upgrades`).
+  - **[discoveries.ts](file:///x:/Archivos%20de%20sistema/Escritorio/lighthouse/src/game/data/discoveries.ts)**: Catálogo de hallazgos costeros (`SHORE_FINDS`), notas de botellas (`BOTTLE_MESSAGES`), colores de lámpara del faro (`LIGHTHOUSE_LAMP_COLORS`) y colores de farolillos (`LANTERN_COLORS`).
   - **[dialogs.ts](file:///x:/Archivos%20de%20sistema/Escritorio/lighthouse/src/game/data/dialogs.ts)**: Textos y diálogos de Gil.
   - **[world.ts](file:///x:/Archivos%20de%20sistema/Escritorio/lighthouse/src/game/data/world.ts)**: Parámetros del mundo (apariciones de palmeras, tiempos de regeneración, límites de cantera).
 - **Motor y Lógica Base (`src/game/`)**:
   - `lh-c00.js` – `lh-c04.js`: Motor Three.js, shaders de agua/cielo/terreno e iluminación.
-  - **[lh-c05.js](file:///x:/Archivos%20de%20sistema/Escritorio/lighthouse/src/game/lh-c05.js)**: Entidades 3D de la isla (palmeras `Zr`, cantera `ri`, pesca `di`, inventario `Vr`, bote de remos `jr`, barca de Gil `zi`, hallazgos `wi`, mesas `yi` y fogatas `Ei`).
+  - **[lh-c05.js](file:///x:/Archivos%20de%20sistema/Escritorio/lighthouse/src/game/lh-c05.js)**: Entidades 3D de la isla (palmeras `Zr`, cantera `ri`, pesca `di`, inventario `Vr`, bote de remos `jr`, barca de Gil `zi`, hallazgos `wi`, mesas `yi`, fogatas `Ei`, bancos mirador `Hi`/`SeatPlacer`, farolillos `Ui`/`LanternPlacer`, jardineras `Wi`/`PlanterPlacer` y trampas de cangrejos `Gi`/`CrabTrapPlacer`).
   - **[lh-c06.js](file:///x:/Archivos%20de%20sistema/Escritorio/lighthouse/src/game/lh-c06.js)**: Clase principal del juego (`qn`), interfaz/HUD (`kn`), audio procedural (`an`) y bucle de simulación.
 - **[src/ui/CustomOverlay.tsx](file:///x:/Archivos%20de%20sistema/Escritorio/lighthouse/src/ui/CustomOverlay.tsx)**: Punto de montaje en React (`.tsx`) para nuevas interfaces o widgets superpuestos.
 
@@ -48,17 +49,28 @@ El proyecto corre localmente con **Vite + React + TypeScript + Three.js** (`npm 
 2. **Modularización en TypeScript**: Catálogos extraídos a `src/game/data/` y puente React en `src/game/bridge.ts`.
 3. **Tienda de Mejoras y Suministros de Gil**:
    - Permite gastar monedas para ampliar bolsillos de la mochila (`12 → 24`), mejorar el hacha (menos golpes y más madera), mejorar el pico (más piedra por golpe y más usos por roca), mejorar el cebo de pesca (+valor y pesca doble) y comprar suministros (fertilizante instantáneo, lotes de madera y piedra).
+4. **Descubrimientos e Interacciones 3D en la Isla**:
+   - **Hallazgos Costeros (`Re` / `wi`)**: Aparición periódica de madera a la deriva, caracolas brillantes, cajas náufragas y botellas con notas en la arena.
+   - **El Faro Interactivo**: Cambiar el color del haz de luz nocturno, tocar la campana para llamar a Gil y vista panorámica de la isla.
+   - **Bote de Remos (`Te` / `jr`)**: Empujar el bote en el agua o revisar su red cuando trae botín flotante (madera, bloques y monedas).
+5. **Objetos Construibles Funcionales y Desbloqueo Progresivo de Planos**:
+   - **Colocación sobre Terreno, Terrazas de Madera (`allowDeck`) y Orilla (`allowShore`)**: Los objetos decorativos/funcionales pueden colocarse tanto sobre la isla como encima de estructuras de bloques de madera construidas por el jugador.
+   - **Banco mirador (`seat`)**: Se desbloquea al colocar 5 bloques de madera. Permite sentarse a contemplar la isla (vista panorámica suave) y recupera `+25` de energía.
+   - **Farolillo marino (`lantern`)**: Se desbloquea al recoger 2 hallazgos del mar o colocar 10 bloques. Ilumina con luz cálida por la noche, mantiene el calor nocturno y al tocarlo cambia entre 4 colores (`LANTERN_COLORS`).
+   - **Jardinera de bayas (`planter`)**: Se desbloquea al reunir 4 piedras. Cultiva bayas isleñas cada 30 s que al cosecharse restauran `+35` de energía y dan `+2` de madera de poda.
+   - **Trampa de cangrejos (`crab_trap`)**: Se desbloquea al pescar 2 peces. Se coloca en la orilla o agua baja y captura pasivamente 1 pez costero + `15` monedas cada 35 s.
+   - **Pistas de Inspiración en la Mesa de Trabajo**: Los planos aún no descubiertos aparecen con candado (`🔒`) y una pista acogedora de qué actividad en la isla los inspira.
 
 ---
 
-## 4. Hoja de Ruta de Interacción Acogedora en la Isla (En Progreso)
+## 4. Próximos Sistemas Sugeridos (Hoja de Ruta Abierta)
 
 Siguiendo la filosofía de *"Una pequeña isla acogedora donde construir"* sin objetivos forzados:
 
-1. **Hallazgos y Curiosidades en la Orilla (Investigación en el mapa 3D):**
-   - Objetos que el mar arrastra periódicamente a las playas (cajas de madera a la deriva, caracolas brillantes, botellas con notas o pequeños tesoros) con los que puedes interactuar haciendo clic directamente en la arena.
-2. **Interacciones Vivas con los Elementos de la Isla:**
-   - **El Faro como rincón interactivo**: Poder tocar el faro para encender/cambiar el tono de su luz ambiental, tocar su campana para llamar al bote de Gil cuando quieras comerciar, o mirar la isla desde las alturas.
-   - **El Bote de Remos (`dinghy`)**: Poder interactuar con el botecito que rodea la isla para darle un empujón, cambiar su rumbo o enviarlo a recoger madera flotante y curiosidades del arrecife mientras construyes.
-3. **Progresión en Cadena de Construcción y Descubrimiento:**
-   - Cada herramienta o bloque que fabricas y cada hallazgo que investigas desbloquea nuevas comodidades para construir, decorar y disfrutar la isla.
+1. **Cuaderno de la Isla (Álbum de Colección y Curiosidades)**:
+   - Registro acogedor de especies de peces (y récord de tamaño), notas del mar encontradas en botellas y rincones construidos.
+2. **Clima Acogedor y Eventos Suaves del Ambiente**:
+   - Lluvia suave (que hace crecer más rápido las palmeras y jardineras), bruma matinal o lluvia de estrellas nocturna con hallazgos especiales en la playa.
+3. **Nuevas Variantes de Construcción y Paisajismo**:
+   - Flores plantables, caminos de piedra, puentes o pérgolas para personalizar aún más cada rincón de la isla.
+

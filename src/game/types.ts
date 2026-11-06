@@ -11,6 +11,10 @@ export type ToolId =
   | 'build'
   | 'bench'
   | 'bonfire'
+  | 'seat'
+  | 'lantern'
+  | 'planter'
+  | 'crab_trap'
   | 'raise'
   | 'dig'
   | 'remove'
@@ -52,8 +56,10 @@ export interface RecipeDef {
   at: CraftStation
   /** Descripción corta en la lista de fabricación. */
   blurb: string
-  /** Si requiere haber desbloqueado el plano/receta en la historia. */
+  /** Si requiere haber desbloqueado el plano/receta mediante acciones en la isla. */
   blueprint?: boolean
+  /** Pista acogedora de qué acción en la isla desbloquea este plano. */
+  unlockHint?: string
 }
 
 export interface ToolSlotDef {

@@ -47,6 +47,55 @@ import i45 from '../../ui/icons/sunset.webp'
 import i46 from '../../ui/icons/undo.webp'
 import i47 from '../../ui/icons/wood.webp'
 
+const svgIcon = (svg: string) => `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
+
+const iLantern = svgIcon(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <circle cx="32" cy="30" r="24" fill="#FFE28A" opacity="0.35"/>
+    <path d="M26 10h12l4 6H22z" fill="#5C4433" stroke="#2C2018" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M29 6h6v4h-6z" fill="#8A6642" stroke="#2C2018" stroke-width="2.2" stroke-linejoin="round"/>
+    <rect x="23" y="16" width="18" height="24" rx="4" fill="#FFF3B0" stroke="#2C2018" stroke-width="2.5"/>
+    <circle cx="32" cy="28" r="6" fill="#FFB830"/>
+    <path d="M22 40h20l-3 6H25z" fill="#5C4433" stroke="#2C2018" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="29" y="46" width="6" height="12" rx="2" fill="#9E6B43" stroke="#2C2018" stroke-width="2.5"/>
+  </svg>`
+)
+
+const iCrabTrap = svgIcon(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <circle cx="32" cy="11" r="6" fill="#E85A4F" stroke="#2C2018" stroke-width="2.4"/>
+    <path d="M26 11h12" stroke="#FFF8EC" stroke-width="2.5"/>
+    <path d="M32 17v7" stroke="#D9C39E" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="12" y="24" width="40" height="26" rx="5" fill="#C88B52" stroke="#2C2018" stroke-width="2.6"/>
+    <path d="M20 24v26M28 24v26M36 24v26M44 24v26M12 33h40M12 42h40" stroke="#7A4E28" stroke-width="2.4"/>
+    <circle cx="27" cy="38" r="3" fill="#E85A4F"/>
+    <circle cx="37" cy="38" r="3" fill="#E85A4F"/>
+  </svg>`
+)
+
+const iPlanter = svgIcon(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <circle cx="24" cy="24" r="11" fill="#56B849" stroke="#2C2018" stroke-width="2.5"/>
+    <circle cx="40" cy="25" r="10" fill="#469E3B" stroke="#2C2018" stroke-width="2.5"/>
+    <circle cx="32" cy="18" r="11" fill="#72CF5E" stroke="#2C2018" stroke-width="2.5"/>
+    <circle cx="25" cy="21" r="3.5" fill="#FF5E5B" stroke="#2C2018" stroke-width="1.5"/>
+    <circle cx="37" cy="17" r="3.5" fill="#FFB830" stroke="#2C2018" stroke-width="1.5"/>
+    <circle cx="39" cy="27" r="3.5" fill="#FF5E5B" stroke="#2C2018" stroke-width="1.5"/>
+    <path d="M14 34h36l-4 20H18z" fill="#B87A44" stroke="#2C2018" stroke-width="2.6" stroke-linejoin="round"/>
+    <rect x="11" y="31" width="42" height="6" rx="2.5" fill="#D4955A" stroke="#2C2018" stroke-width="2.5"/>
+  </svg>`
+)
+
+const iSeat = svgIcon(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <rect x="12" y="18" width="40" height="8" rx="3" fill="#D99B5E" stroke="#2C2018" stroke-width="2.5"/>
+    <rect x="12" y="28" width="40" height="7" rx="2.5" fill="#C4864B" stroke="#2C2018" stroke-width="2.5"/>
+    <rect x="8" y="35" width="48" height="8" rx="3" fill="#E6AD70" stroke="#2C2018" stroke-width="2.6"/>
+    <rect x="13" y="43" width="6" height="13" rx="2" fill="#7D5233" stroke="#2C2018" stroke-width="2.4"/>
+    <rect x="45" y="43" width="6" height="13" rx="2" fill="#7D5233" stroke="#2C2018" stroke-width="2.4"/>
+  </svg>`
+)
+
 const icons: Record<string, string> = {
   axe: i0,
   backpack: i1,
@@ -96,6 +145,10 @@ const icons: Record<string, string> = {
   sunset: i45,
   undo: i46,
   wood: i47,
+  lantern: iLantern,
+  crab_trap: iCrabTrap,
+  planter: iPlanter,
+  seat: iSeat,
 }
 
 export default icons
