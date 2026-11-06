@@ -4,5 +4,7 @@ export * from './tools'
 export * from './dialogs'
 export * from './world'
 export * from './upgrades'
+export * from './discoveries'
+
 
 

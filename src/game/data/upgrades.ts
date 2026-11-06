@@ -173,3 +173,4 @@ export const GIL_UPGRADES: UpgradeDef[] = [
     getDescription: () => '10 piedras de cantera y renueva todas las rocas por hoy',
   },
 ]
+

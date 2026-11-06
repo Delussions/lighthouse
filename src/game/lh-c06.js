@@ -92,6 +92,9 @@ import {
   getUpgradeLevel,
   incrementUpgradeLevel,
   resetUpgradeState,
+  SHORE_FINDS,
+  BOTTLE_MESSAGES,
+  LIGHTHOUSE_LAMP_COLORS,
 } from './data/index'
 import { notifyGameReady } from './bridge'
 var Ke = [`day`, `sunset`, `night`, `dawn`],
@@ -6832,6 +6835,10 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
       let c = n ? [`axe`, `log`] : r ? (r.found ?? [`axe`, `log`]) : []
       ;(this.inventory.axe && !c.includes(`axe`) && c.push(`axe`),
         this.finds.load(this.palms.models.axe, this.palms.models.log, c),
+        (this.finds.canSpawnCrates = () =>
+          this.benches.count > 0 || this.inventory.benches > 0 || this.inventory.pickaxe),
+        (this.finds.canSpawnBottles = () =>
+          this.inventory.rod || this.story.caught.size > 0),
         (this.logObstacle = this.finds.obstacle),
         this.logObstacle && this.builder.obstacles.push(this.logObstacle),
         n ||
@@ -7106,6 +7113,16 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
       }
       switch (n) {
         case `hand`: {
+          let boatHit = this.boat ? this.boat.pick(e.ndcX, e.ndcY, this.rig) : null
+          if (boatHit && this.inFront(boatHit.t, e)) {
+            this.interactBoat(boatHit.anchor, boatHit.hasLoot)
+            return
+          }
+          let lhHit = this.pickLighthouse(e.ndcX, e.ndcY)
+          if (lhHit && this.inFront(lhHit.t, e)) {
+            this.interactLighthouse()
+            return
+          }
           let t = this.palms.pick(e.ndcX, e.ndcY)
           t?.state === `standing` &&
             this.inFront(t.t, e) &&
@@ -7252,14 +7269,24 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
       else if (s)
         ((n = s.clone().setY(s.y + 0.5)),
           (r = this.fishing.phase === `bite` ? `¡Recoge!` : `Recoger`))
-      else if (o && this.inFront(o.t, e)) ((n = o.anchor), (r = `Recoger`))
+      else if (o && this.inFront(o.t, e))
+        ((n = o.anchor), (r = SHORE_FINDS[o.kind]?.prompt ?? `Recoger`))
       else if (i && this.inFront(i.t, e))
         ((n = i.anchor), (r = t === `remove` ? `Recoger` : `Hacer bloques`))
       else if (a && this.inFront(a.t, e))
         ((n = a.anchor), (r = t === `remove` ? `Recoger` : `Cocinar`))
       else if (t === `hand`) {
-        let t = this.palms.pick(e.ndcX, e.ndcY)
-        t?.state === `standing` && this.inFront(t.t, e) && ((n = t.anchor), (r = `Sacudir`))
+        let boatHit = this.boat ? this.boat.pick(e.ndcX, e.ndcY, this.rig) : null,
+          lhHit = this.pickLighthouse(e.ndcX, e.ndcY),
+          palmHit = this.palms.pick(e.ndcX, e.ndcY)
+        if (boatHit && this.inFront(boatHit.t, e)) {
+          ;((n = boatHit.anchor),
+            (r = boatHit.hasLoot ? `Revisar red del bote` : `Empujar bote`))
+        } else if (lhHit && this.inFront(lhHit.t, e)) {
+          ;((n = lhHit.anchor), (r = `Faro de la isla`))
+        } else if (palmHit?.state === `standing` && this.inFront(palmHit.t, e)) {
+          ;((n = palmHit.anchor), (r = `Sacudir`))
+        }
       } else if (t === `axe`) {
         let t = this.palms.pick(e.ndcX, e.ndcY)
         t?.state === `standing`
@@ -7302,6 +7329,61 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
           this.collectLog(t, 0))
         return
       }
+      if (e === `driftwood`) {
+        let scr = this.toScreen(t),
+          woodAmt = 3 + Math.floor(Math.random() * 3)
+        ;(this.sound.collect(1),
+          this.pad.rumble(0.2, 60),
+          this.hud.fly(`wood`, scr, 0, () => this.sound.collect(2), woodAmt),
+          this.inventory.addWood(woodAmt),
+          this.benches.count > 0
+            ? ((this.inventory.owned += 6),
+              this.inventory.changed(),
+              this.hud.fly(`blocks`, scr, 120, void 0, 6),
+              this.hud.toast(`¡Madera a la deriva! +${woodAmt} de madera y +6 bloques tallados`, `wood`, 3600))
+            : this.hud.toast(`¡Madera a la deriva! +${woodAmt} de madera traída por las olas`, `wood`, 3200))
+        return
+      }
+      if (e === `shell`) {
+        let scr = this.toScreen(t),
+          coinsAmt = 15 + Math.floor(Math.random() * 16)
+        ;(this.sound.found(),
+          this.pad.rumble(0.25, 80),
+          (this.story.earned = !0),
+          this.hud.fly(`coins`, scr, 0, () => this.sound.coins(2), coinsAmt),
+          this.inventory.addCoins(coinsAmt),
+          this.hud.fly(`stone`, scr, 110, void 0, 3),
+          this.inventory.addStone(3),
+          this.hud.toast(`¡Caracola brillante! +${coinsAmt} monedas antiguas y +3 piedras`, `coin`, 3600))
+        return
+      }
+      if (e === `crate`) {
+        let scr = this.toScreen(t)
+        ;(this.sound.found(),
+          this.pad.rumble(0.35, 110),
+          this.hud.fly(`wood`, scr, 0, () => this.sound.collect(2), 6),
+          this.hud.fly(`stone`, scr, 90, void 0, 5),
+          this.hud.fly(`blocks`, scr, 180, void 0, 12),
+          this.inventory.addWood(6),
+          this.inventory.addStone(5),
+          (this.inventory.owned += 12),
+          this.inventory.changed(),
+          this.hud.toast(`¡Caja náufraga! +12 bloques, +6 de madera y +5 piedras`, `block`, 4200))
+        return
+      }
+      if (e === `bottle`) {
+        let scr = this.toScreen(t),
+          msg = BOTTLE_MESSAGES[Math.floor(Math.random() * BOTTLE_MESSAGES.length)]
+        ;(this.sound.found(),
+          this.pad.rumble(0.3, 90),
+          (this.story.earned = !0),
+          this.hud.fly(`coins`, scr, 0, () => this.sound.coins(2), 20),
+          this.inventory.addCoins(20),
+          this.hud.talk(`Botella del mar`, `request`, [msg], [{ key: `ok`, label: `Guardar nota (+20 monedas)` }], () =>
+            this.hud.close()
+          ))
+        return
+      }
       ;(this.sound.found(),
         this.pad.rumble(0.35, 140),
         this.hud.foundAxe(),
@@ -7310,6 +7392,92 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
             this.builder.tool === `hand` && (this.sound.select(0), this.setTool(`axe`)))
         }),
         this.inventory.giveAxe())
+    }
+    lampIdx = 0
+    pickLighthouse(e, t) {
+      let n = this.rig.rayFrom(e, t),
+        r = new g(0.5, 4.1, 0.4),
+        i = r.clone().sub(n.origin),
+        a = i.dot(n.direction)
+      if (a <= 0) return null
+      let o = i.dot(i) - a * a
+      return o > 1.8 ? null : { t: a - Math.sqrt(1.8 - o), anchor: new g(0.5, 6.2, 0.4) }
+    }
+    interactBoat(e, t) {
+      let scr = this.toScreen(e)
+      this.particles.splash(e.clone().setY(0), new a(`#E6FBF4`))
+      if (!t) {
+        ;(this.boat.nudge(),
+          this.sound.cast(),
+          this.pad.rumble(0.18, 50),
+          this.hud.toast(
+            `Empujaste el bote — sigue rodeando la isla en busca de tesoros flotantes`,
+            `palm`,
+            3200
+          ))
+        return
+      }
+      ;(this.boat.collectLoot(),
+        this.sound.caught(),
+        this.pad.rumble(0.35, 110),
+        (this.story.earned = !0),
+        this.hud.fly(`wood`, scr, 0, () => this.sound.collect(2), 5),
+        this.hud.fly(`blocks`, scr, 100, void 0, 6),
+        this.hud.fly(`coins`, scr, 200, () => this.sound.coins(2), 15),
+        this.inventory.addWood(5),
+        (this.inventory.owned += 6),
+        this.inventory.addCoins(15),
+        this.hud.toast(
+          `¡La red del bote trajo +5 de madera, +6 bloques y +15 monedas!`,
+          `block`,
+          4e3
+        ),
+        this.autosave?.schedule())
+    }
+    interactLighthouse() {
+      let cur = LIGHTHOUSE_LAMP_COLORS[this.lampIdx % LIGHTHOUSE_LAMP_COLORS.length],
+        next = LIGHTHOUSE_LAMP_COLORS[(this.lampIdx + 1) % LIGHTHOUSE_LAMP_COLORS.length],
+        choices = [
+          { key: `lamp`, label: `Luz: cambiar a ${next.name}` },
+          ...(!this.fisherman.visible
+            ? [{ key: `bell`, label: `Tocar campana (llamar a Gil)` }]
+            : []),
+          { key: `view`, label: `Mirar toda la isla` },
+          { key: `close`, label: `Seguir construyendo` },
+        ]
+      this.hud.talk(
+        `El Faro`,
+        `lighthouse`,
+        [
+          `Desde la galería del faro se ve toda tu isla y el arrecife. Lámpara actual: ${cur.name}.`,
+        ],
+        choices,
+        (k) => {
+          if (k === `lamp`) {
+            this.lampIdx = (this.lampIdx + 1) % LIGHTHOUSE_LAMP_COLORS.length
+            let c = LIGHTHOUSE_LAMP_COLORS[this.lampIdx]
+            ;(this.beam?.setColor(c.beamHex, c.lightHex),
+              this.sound.found(),
+              this.hud.close(),
+              this.hud.toast(`Lámpara del faro cambiada a: ${c.name}`, `lighthouse`, 3200))
+          } else if (k === `bell`) {
+            ;(this.sound.bell(),
+              this.fisherman.arrive(!this.fisherman.met, this.clock.workDay),
+              this.hud.close(),
+              this.hud.toast(
+                `¡Hiciste sonar la campana del faro! El bote de Gil se acerca en el horizonte`,
+                `gil`,
+                4400
+              ))
+          } else if (k === `view`) {
+            ;(this.hud.close(),
+              Object.assign(this.rig.goal, { x: 0.5, z: 0.4, zoom: 0.98, tilt: 0.05 }),
+              this.rig.glide(1.8))
+          } else {
+            this.hud.close()
+          }
+        }
+      )
     }
     make(e) {
       let t = ke(e)

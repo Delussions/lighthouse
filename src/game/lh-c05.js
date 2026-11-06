@@ -113,6 +113,8 @@ import {
   getRecipe as Br,
   WORLD_CONFIG,
   getUpgradeLevel,
+  SHORE_FINDS,
+  SHORE_SPOTS,
 } from './data/index'
 var ot = class extends je {
   constructor(e) {
@@ -3893,6 +3895,10 @@ var Yn = class {
       let r = 1 + 0.04 * Math.sin(performance.now() * 0.004)
       this.halo.scale.setScalar((2.2 + n * 1.8) * r)
     }
+    setColor(e, t) {
+      for (let n of this.shafts) n.material.uniforms.uColor.value.set(e)
+      for (let n of this.lights) n.color.set(t)
+    }
   },
   Xn = 12,
   Z = new j(-0.42, -0.17),
@@ -4474,6 +4480,7 @@ if (abs(aWing) > 0.5) {
     direction = 1
     checkpoint = new j(1 / 0, 1 / 0)
     checkpointTime = 0
+    lastLootAt = 0
     bob = 0
     flow = new j()
     s = { h: 0, dx: 0, dz: 0 }
@@ -4517,6 +4524,27 @@ if (abs(aWing) > 0.5) {
     }
     near(e, t, n) {
       return Math.hypot(this.pos.x - e, this.pos.z - t) < n
+    }
+    get hasLoot() {
+      return this.clock >= 0 && this.clock - this.lastLootAt >= 40
+    }
+    collectLoot() {
+      ;((this.lastLootAt = this.clock), (this.direction *= -1), (this.vel.y += 1.6))
+    }
+    nudge() {
+      ;((this.direction *= -1), (this.vel.y += 1.2))
+    }
+    pick(e, t, n) {
+      let r = n.rayFrom(e, t),
+        i = this.pos.clone().setY(this.pos.y + 0.35),
+        a = r.intersectSphere(new b(i, 1.15), new M())
+      return a
+        ? {
+            t: a.distanceTo(r.origin),
+            anchor: i.clone().setY(i.y + 0.85),
+            hasLoot: this.hasLoot,
+          }
+        : null
     }
     update(e, t) {
       ;(this.clock < 0 && (this.clock = e), this.updateFlow(e))
@@ -6437,6 +6465,12 @@ var mi = 0.2,
     onTake
     list = []
     glint = 0.8
+    shoreGlint = 1.6
+    spawnTimer = 14
+    seq = 1
+    logTemplate = null
+    canSpawnCrates = () => !1
+    canSpawnBottles = () => !1
     cell = null
     ground = 0
     obstacle = null
@@ -6444,6 +6478,7 @@ var mi = 0.2,
       ;((this.island = e), (this.rig = t), (this.fx = n), (this.group.name = `finds`))
     }
     load(e, t, n) {
+      this.logTemplate = t ?? null
       let { x: r, z: i, yaw: a } = bi,
         o = this.island.height(r, i)
       this.ground = o
@@ -6470,7 +6505,7 @@ var mi = 0.2,
       this.list.length &&
         ((this.cell = [Math.floor(r), Math.floor(i)]), this.island.reserve(...this.cell))
     }
-    add(e, t, n, r) {
+    add(e, t, n, r, i = e) {
       ;(t.traverse((e) => {
         let t = e
         t.isMesh && ((t.castShadow = !0), (t.receiveShadow = !0))
@@ -6478,6 +6513,7 @@ var mi = 0.2,
         this.group.add(t),
         this.list.push({
           id: e,
+          kind: i,
           root: t,
           centre: n,
           r,
@@ -6486,6 +6522,53 @@ var mi = 0.2,
           base: t.position.clone(),
           scale: t.scale.x,
         }))
+    }
+    buildShoreMesh(e) {
+      let t = new D()
+      if (e === `driftwood` && this.logTemplate) {
+        let e = this.logTemplate.clone(!0)
+        return (e.scale.setScalar(1.55), t.add(e), t)
+      }
+      if (e === `crate`) {
+        let e = new i(new se(0.46, 0.38, 0.46), new R({ color: `#C98B4B`, roughness: 0.75 })),
+          n = new i(new se(0.5, 0.08, 0.5), new R({ color: `#8E5A2B`, roughness: 0.8 }))
+        return ((e.position.y = 0.19), (n.position.y = 0.34), t.add(e, n), t)
+      }
+      if (e === `bottle`) {
+        let e = new i(new de(0.06, 0.11, 0.34, 10), new R({ color: `#66C9BA`, roughness: 0.3 })),
+          n = new i(new de(0.045, 0.045, 0.09, 8), new R({ color: `#C89458`, roughness: 0.8 }))
+        return (
+          (e.position.y = 0.14),
+          (n.position.y = 0.33),
+          t.add(e, n),
+          (t.rotation.z = 0.95),
+          t
+        )
+      }
+      let n = new i(new Fe(0.2, 12, 10), new R({ color: `#FF947E`, roughness: 0.5 })),
+        r = new i(new Fe(0.11, 10, 8), new R({ color: `#FFF5E4`, roughness: 0.4 }))
+      return ((n.scale.set(1.2, 0.65, 1)), (n.position.y = 0.1), (r.position.set(0.05, 0.18, 0)), t.add(n, r), t)
+    }
+    spawnShoreFind() {
+      let e = this.list.filter((e) => e.state === `here` && e.id !== `axe` && e.id !== `log`)
+      if (e.length >= 3) return
+      let t = [...SHORE_SPOTS].sort(() => Math.random() - 0.5)
+      for (let [n, r] of t) {
+        if (e.some((e) => Math.hypot(e.centre.x - n, e.centre.z - r) < 2.5)) continue
+        let i = this.island.height(n, r)
+        if (i < 0.02 || i > 0.75) continue
+        let a = [`driftwood`, `shell`]
+        ;(this.canSpawnCrates() && a.push(`crate`),
+          this.canSpawnBottles() && a.push(`bottle`))
+        let o = a[Math.floor(Math.random() * a.length)],
+          s = this.buildShoreMesh(o),
+          c = `shore_${this.seq++}`
+        ;(s.position.set(n, i + 0.08, r),
+          (s.rotation.y = Math.random() * Math.PI * 2),
+          this.add(c, s, new M(n, i + 0.24, r), 0.7, o),
+          this.fx.sparkles(new M(n, i + 0.4, r), 6, new p(SHORE_FINDS[o]?.sparkleColor ?? `#FFF3C4`)))
+        return
+      }
     }
     taken() {
       return [`axe`, `log`].filter((e) => !this.list.some((t) => t.id === e && t.state === `here`))
@@ -6505,15 +6588,31 @@ var mi = 0.2,
               : i
                 ? { f: i, centre: i.centre, r: i.r }
                 : null
-      if (!a) return null
-      let o = n.intersectSphere(new b(a.centre, a.r), new M())
-      return o
-        ? {
+      if (a) {
+        let e = n.intersectSphere(new b(a.centre, a.r), new M())
+        if (e)
+          return {
             id: a.f.id,
-            t: o.distanceTo(n.origin),
+            kind: a.f.kind,
+            t: e.distanceTo(n.origin),
             anchor: a.f.centre.clone().setY(a.f.centre.y + 0.55),
           }
-        : null
+      }
+      let o = null
+      for (let e of this.list) {
+        if (e.state !== `here` || e.id === `axe` || e.id === `log`) continue
+        let t = n.intersectSphere(new b(e.centre, e.r), new M())
+        if (!t) continue
+        let r = t.distanceTo(n.origin)
+        r < (o?.t ?? 1 / 0) &&
+          (o = {
+            id: e.id,
+            kind: e.kind,
+            t: r,
+            anchor: e.centre.clone().setY(e.centre.y + 0.55),
+          })
+      }
+      return o
     }
     take(e) {
       let t = this.list.find((t) => t.id === e && t.state === `here`)
@@ -6524,25 +6623,40 @@ var mi = 0.2,
         this.fx.dust(t.centre.clone().setY(this.island.height(t.centre.x, t.centre.z)), 0.4, 8),
         e === `log` && (this.obstacle = null),
         !this.any && this.cell && (this.island.unreserve(...this.cell), (this.cell = null)),
-        this.onTake?.(e, t.centre.clone()))
+        this.onTake?.(t.kind ?? e, t.centre.clone()))
     }
     setGround() {
       if (!this.list.length) return
-      let e = this.island.height(bi.x, bi.z),
-        t = e - this.ground
-      if (!(Math.abs(t) < 1e-4)) {
-        this.ground = e
-        for (let e of this.list) ((e.base.y += t), (e.centre.y += t))
-        this.obstacle && ((this.obstacle.y0 += t), (this.obstacle.y1 += t))
+      for (let e of this.list) {
+        let t = this.island.height(e.base.x, e.base.z) + 0.08
+        ;((e.base.y = t), (e.centre.y = t + 0.16))
       }
     }
     update(e) {
+      this.spawnTimer -= e
+      if (this.spawnTimer <= 0) {
+        this.spawnTimer = 28 + Math.random() * 14
+        this.spawnShoreFind()
+      }
       let t = this.list.find((e) => e.id === `axe` && e.state === `here`)
       t &&
         ((this.glint -= e),
         this.glint <= 0 &&
           ((this.glint = 1.4 + Math.random() * 0.8),
           this.fx.sparkles(t.centre.clone().setY(t.centre.y - 0.3), 2, new p(`#FFFBE6`))))
+      this.shoreGlint -= e
+      if (this.shoreGlint <= 0) {
+        this.shoreGlint = 2.1 + Math.random() * 1.2
+        for (let e of this.list)
+          e.state === `here` &&
+            e.id !== `axe` &&
+            e.id !== `log` &&
+            this.fx.sparkles(
+              e.centre.clone(),
+              2,
+              new p(SHORE_FINDS[e.kind]?.sparkleColor ?? `#FFFBE6`)
+            )
+      }
       for (let t = this.list.length - 1; t >= 0; t--) {
         let n = this.list[t]
         if (n.state === `here`) {
