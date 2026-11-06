@@ -35,3 +35,4 @@ export const WORLD_CONFIG = {
   /** Capacidad inicial de bolsillos en la mochila. */
   defaultPockets: 12,
 }
+

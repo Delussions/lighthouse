@@ -46,3 +46,4 @@ export const RECIPES: RecipeDef[] = [
 export function getRecipe(id: string): RecipeDef | undefined {
   return RECIPES.find((r) => r.id === id)
 }
+

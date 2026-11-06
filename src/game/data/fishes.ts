@@ -1,4 +1,5 @@
 import type { FishDef } from '../types'
+import { getUpgradeLevel } from './upgrades'
 
 /**
  * Catálogo completo de peces de Lighthouse.
@@ -105,16 +106,18 @@ export function isFishId(id: unknown): id is string {
   return typeof id === 'string' && FISH_IDS.includes(id)
 }
 
-/** Precio de venta del pez (cocinado vale el triple). */
+/** Precio de venta del pez (cocinado vale el triple, más bonificación por cebo mejorado). */
 export function getFishPrice(id: string, cooked = false): number {
   const fish = getFish(id)
-  return (fish?.price ?? 0) * (cooked ? 3 : 1)
+  const mult = 1 + getUpgradeLevel('rod_upgrade') * 0.25
+  return Math.round((fish?.price ?? 0) * (cooked ? 3 : 1) * mult)
 }
 
-/** Puntos de hambre que restaura el pez (cocinado alimenta el triple). */
+/** Puntos de hambre que restaura el pez (cocinado alimenta el triple, más bonificación por cebo mejorado). */
 export function getFishFood(id: string, cooked = false): number {
   const fish = getFish(id)
-  return (fish?.food ?? 0) * (cooked ? 3 : 1)
+  const mult = 1 + getUpgradeLevel('rod_upgrade') * 0.25
+  return Math.round((fish?.food ?? 0) * (cooked ? 3 : 1) * mult)
 }
 
 /** Elige un pez al azar según la hora (día o noche) y su peso de probabilidad. */
@@ -127,3 +130,4 @@ export function pickRandomFish(isNight: boolean, rng = Math.random()): FishDef {
   }
   return pool[pool.length - 1]
 }
+

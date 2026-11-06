@@ -26,6 +26,7 @@ export const GIL_DIALOGS = {
   /** Opciones del menú de conversación con Gil. */
   choices: {
     sell: 'Vender pescado',
+    buy: 'Comprar mejoras',
     order: 'El pedido especial',
     bye: '¡Hasta luego!',
   },
@@ -50,3 +51,4 @@ export const GIL_DIALOGS = {
   afterShopClose: '¿Algo más?',
   afterOrderClose: 'Sin prisa. El pedido sigue en pie hasta que vuelva a casa.',
 }
+

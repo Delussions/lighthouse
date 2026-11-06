@@ -88,6 +88,10 @@ import {
   TERRAFORM_TOOLS as wn,
   PHASE_LABELS as En,
   GIL_DIALOGS,
+  GIL_UPGRADES,
+  getUpgradeLevel,
+  incrementUpgradeLevel,
+  resetUpgradeState,
 } from './data/index'
 import { notifyGameReady } from './bridge'
 var Ke = [`day`, `sunset`, `night`, `dawn`],
@@ -4154,6 +4158,7 @@ var xn = 34,
     menu
     cook
     shop
+    upgradesEl
     orderEl
     dialog
     wanted = null
@@ -4305,6 +4310,11 @@ var xn = 34,
         <div class="make-list shop-list"></div>
         <div class="shop-total"><span class="row-text">Todo<small class="shop-sum"></small></span><button class="btn primary sell-all"><span class="pad-only">${K(`triangle`)}</span>Vender todo</button></div>
       </section>
+      <section class="panel upgrades wide" role="dialog" aria-label="Tienda de mejoras de Gil">
+        <header>${W(`gil`, `panel-ic`)}<h2>Tienda de mejoras de Gil</h2><span class="shop-coins">${W(`coin`, `mini`)}<b>0</b></span><button class="close" aria-label="Cerrar">${Mn()}</button></header>
+        <p class="cook-note">Invierte tus monedas en mejorar tus herramientas, ampliar la mochila o comprar suministros.</p>
+        <div class="make-list upgrades-list"></div>
+      </section>
       <section class="panel order" role="dialog" aria-label="Pedido especial">
         <header>${W(`request`, `panel-ic`)}<h2>Pedido especial</h2><button class="close" aria-label="Cerrar">${Mn()}</button></header>
         <p class="order-note">Un lote para el mercado de la isla de Gil. Tráele todo esto y te recompensará muy bien.</p>
@@ -4361,6 +4371,7 @@ var xn = 34,
         (this.menu = r(`.panel.menu`)),
         (this.cook = r(`.panel.cook`)),
         (this.shop = r(`.panel.shop`)),
+        (this.upgradesEl = r(`.panel.upgrades`)),
         (this.orderEl = r(`.panel.order`)),
         (this.dialog = new Cn(
           e,
@@ -4854,6 +4865,7 @@ var xn = 34,
         this.panel === `pack` && this.renderPack(),
         this.panel === `cook` && this.renderCooking(),
         this.panel === `shop` && this.renderShop(),
+        this.panel === `upgrades` && this.renderUpgrades(),
         this.panel === `order` && this.renderOrder(),
         this.nudgeRecipes())
     }
@@ -5311,11 +5323,13 @@ var xn = 34,
             ? this.cook
             : e === `shop`
               ? this.shop
-              : e === `order`
-                ? this.orderEl
-                : e === `talk`
-                  ? this.dialog.el
-                  : this.menu
+              : e === `upgrades`
+                ? this.upgradesEl
+                : e === `order`
+                  ? this.orderEl
+                  : e === `talk`
+                    ? this.dialog.el
+                    : this.menu
     }
     talk(e, t, n, r = [], i, a) {
       ;(this.panel && this.panel !== `talk` && this.close(),
@@ -5329,6 +5343,41 @@ var xn = 34,
     }
     openShop() {
       this.open(`shop`)
+    }
+    openUpgrades() {
+      this.open(`upgrades`)
+    }
+    renderUpgrades() {
+      let e = this.upgradesEl.querySelector(`.upgrades-list`),
+        t = this.inv.blocks === 1 / 0,
+        n = this.inv.coins
+      this.upgradesEl.querySelector(`.shop-coins b`).textContent = t ? `∞` : String(n)
+      e.innerHTML = GIL_UPGRADES.map((u) => {
+        let lvl = u.maxLevel > 0 ? getUpgradeLevel(u.id) : 0,
+          maxed = u.maxLevel > 0 && lvl >= u.maxLevel,
+          price = maxed ? 0 : u.prices[Math.min(lvl, u.prices.length - 1)],
+          afford = t || n >= price,
+          badge = u.maxLevel > 0 ? ` · Niv. ${lvl}/${u.maxLevel}` : ``,
+          desc = u.getDescription(lvl)
+        return (
+          `<div class="make-row${maxed ? ` done` : ``}">` +
+          `${W(u.icon)}` +
+          `<span class="row-text"><b>${u.name}${badge}</b><small>${desc}</small>` +
+          (maxed
+            ? ``
+            : `<span class="costs"><span class="cost${afford ? `` : ` short`}">${W(`coin`, `mini`)}<b>${price}</b></span></span>`) +
+          `</span>` +
+          (maxed
+            ? `<button class="btn small disabled" disabled>Máximo</button>`
+            : `<button class="btn primary small buy-upgrade${afford ? `` : ` disabled`}" data-upgrade="${u.id}"><span class="pad-only">${K(`cross`)}</span>${u.buttonLabel ?? `Mejorar`}</button>`) +
+          `</div>`
+        )
+      }).join(``)
+      e.querySelectorAll(`.buy-upgrade`).forEach((btn) =>
+        btn.addEventListener(`click`, () => {
+          this.handlers.onBuyUpgrade(btn.dataset.upgrade)
+        })
+      )
     }
     renderShop() {
       let e = this.shop.querySelector(`.shop-list`),
@@ -5482,6 +5531,7 @@ var xn = 34,
         e === `crafting` && this.refreshCrafting(),
         e === `cook` && this.renderCooking(),
         e === `shop` && this.renderShop(),
+        e === `upgrades` && this.renderUpgrades(),
         e === `order` && this.renderOrder(),
         this.root.classList.toggle(`talking`, e === `talk`),
         e === `pack` && (this.packBtn.classList.remove(`new`), this.renderPack()),
@@ -5506,9 +5556,11 @@ var xn = 34,
                   ? `.cook-one`
                   : e === `shop`
                     ? `.sell`
-                    : e === `order`
-                       ? `.hand-over:not(.disabled)`
-                      : `.row`
+                    : e === `upgrades`
+                      ? `.buy-upgrade:not(.disabled)`
+                      : e === `order`
+                        ? `.hand-over:not(.disabled)`
+                        : `.row`
           ) ?? n.querySelector(`.make, .close`)
         )?.focus({ preventScroll: !0 })
     }
@@ -6015,7 +6067,7 @@ var xn = 34,
             icon: `coin`,
             title: `Monedas`,
             qty: i ? `∞` : `×${this.inv.coins}`,
-            text: `Te las paga el pescador por tus peces. ¿Para qué servirán? Ya veremos…`,
+            text: `Te las paga Gil por tus peces. ¡Habla con él para comprar mejoras de herramientas, ampliar tu mochila o conseguir suministros!`,
           }
         case `pocket`: {
           let t = e.dataset.key ?? ``,
@@ -6822,6 +6874,7 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
           onEat: (e, t) => this.eat(e, t),
           onCook: (e, t) => this.cook(e, t),
           onSell: (e, t, n) => this.sell(e, t, n),
+          onBuyUpgrade: (e) => this.buyUpgrade(e),
           onHandOver: () => this.handOver(),
           onVoice: (e) => this.sound.babble(e, 165),
           onStartOver: () => this.startOver(),
@@ -6829,8 +6882,10 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
             ;(this.sound.panel(e),
               e
                 ? (this.hover(null), (this.padHold = null))
-                : this.hud.closedPanel === `shop` || this.hud.closedPanel === `order`
-                  ? this.later(0.05, () => this.talkMore(this.hud.closedPanel === `shop`))
+                : this.hud.closedPanel === `shop` ||
+                    this.hud.closedPanel === `upgrades` ||
+                    this.hud.closedPanel === `order`
+                  ? this.later(0.05, () => this.talkMore(this.hud.closedPanel !== `order`))
                   : this.hud.closedPanel === `crafting` &&
                     this.inventory.blocks > 0 &&
                     this.builder.tool !== `build` &&
@@ -6888,8 +6943,9 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
           ;(this.pad.rumble(0.8, 220), this.hud.bite())
         }),
         (this.quarry.onStone = (e, t) => {
-          ;(this.hud.fly(`stone`, this.toScreen(e), 60, () => this.sound.pebble(t)),
-            this.inventory.addStone(1),
+          let bonus = 1 + getUpgradeLevel(`pickaxe_upgrade`)
+          ;(this.hud.fly(`stone`, this.toScreen(e), 60, () => this.sound.pebble(t), bonus),
+            this.inventory.addStone(bonus),
             this.hunger.work(1.2),
             this.pad.rumble(0.35, 70),
             this.autosave?.schedule())
@@ -7280,9 +7336,24 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
         this.hud.toast(`¡Tienes los bolsillos llenos! Se ha vuelto al mar`, `backpack`, 3600)
         return
       }
-      ;(this.hud.fly(`fish`, this.toScreen(t), 650, () => this.sound.collect(2), 1, `fish_${e.id}`),
-        this.inventory.addFish(e.id),
+      let doubleCatch =
+        getUpgradeLevel(`rod_upgrade`) >= 2 &&
+        Math.random() < 0.35 &&
+        this.inventory.roomFor(e.id)
+      ;(this.hud.fly(
+        `fish`,
+        this.toScreen(t),
+        650,
+        () => this.sound.collect(2),
+        doubleCatch ? 2 : 1,
+        `fish_${e.id}`
+      ),
+        this.inventory.addFish(e.id, !1, doubleCatch ? 2 : 1),
         this.hud.caught(e),
+        doubleCatch &&
+          this.later(1.2, () =>
+            this.hud.toast(`¡Pesca doble gracias al cebo maestro! (×2 ${e.name})`, `fish_${e.id}`, 3200)
+          ),
         this.story.catch(e.id) && this.firstCatch(),
         this.autosave?.schedule())
     }
@@ -7328,6 +7399,7 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
       let t = this.fisherman.request,
         n = [
           { key: `sell`, label: GIL_DIALOGS.choices.sell },
+          { key: `buy`, label: GIL_DIALOGS.choices.buy },
           ...(t && !t.done ? [{ key: `order`, label: GIL_DIALOGS.choices.order }] : []),
           { key: `bye`, label: GIL_DIALOGS.choices.bye },
         ]
@@ -7337,6 +7409,7 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
       let t = this.fisherman
       if (e === `sell`)
         this.inventory.anyFish ? this.hud.openShop() : this.gilSays(GIL_DIALOGS.noFishToSell)
+      else if (e === `buy`) this.hud.openUpgrades()
       else if (e === `order`) {
         let e = t.request
         e && this.hud.openOrder(e.want, e.reward)
@@ -7347,9 +7420,77 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
     }
     talkMore(e) {
       this.fisherman.here &&
-        (e && this.soldToday
-          ? this.gilChoice(`bye`)
-          : this.gilSays([e ? GIL_DIALOGS.afterShopClose : GIL_DIALOGS.afterOrderClose]))
+        this.gilSays([e ? GIL_DIALOGS.afterShopClose : GIL_DIALOGS.afterOrderClose])
+    }
+    buyUpgrade(e) {
+      let u = GIL_UPGRADES.find((t) => t.id === e)
+      if (!u) return
+      let lvl = u.maxLevel > 0 ? getUpgradeLevel(u.id) : 0
+      if (u.maxLevel > 0 && lvl >= u.maxLevel) {
+        this.sound.deny()
+        return
+      }
+      let price = u.prices[Math.min(lvl, u.prices.length - 1)]
+      if (!this.inventory.spendCoins(price)) {
+        ;(this.sound.deny(),
+          this.hud.toast(
+            `Te faltan ${price - this.inventory.coins} monedas — véndele pescado a Gil`,
+            `coin`,
+            2800
+          ))
+        return
+      }
+      ;(this.sound.craft(),
+        this.sound.coins(3),
+        this.pad.rumble(0.4, 120))
+      if (e === `pack_upgrade`) {
+        ;(incrementUpgradeLevel(`pack_upgrade`),
+          this.inventory.upgradePockets(4),
+          this.hud.toast(
+            `¡Mochila ampliada a ${this.inventory.pockets} bolsillos!`,
+            `backpack`,
+            3800
+          ))
+      } else if (e === `axe_upgrade`) {
+        let next = incrementUpgradeLevel(`axe_upgrade`)
+        this.hud.toast(
+          next === 1
+            ? `¡Hacha afilada! Ahora talas en 2 golpes y sacas 7 troncos`
+            : `¡Hacha maestra! Ahora talas de 1 golpe y sacas 9 troncos`,
+          `axe`,
+          4200
+        )
+      } else if (e === `pickaxe_upgrade`) {
+        let next = incrementUpgradeLevel(`pickaxe_upgrade`)
+        this.hud.toast(
+          next === 1
+            ? `¡Pico reforzado! Doble piedra por golpe y 6 usos por roca`
+            : `¡Pico maestro! Triple piedra por golpe y 9 usos por roca`,
+          `pickaxe`,
+          4200
+        )
+      } else if (e === `rod_upgrade`) {
+        let next = incrementUpgradeLevel(`rod_upgrade`)
+        this.hud.toast(
+          next === 1
+            ? `¡Cebo luminoso! Tus peces ahora valen y alimentan un +25%`
+            : `¡Cebo maestro! Peces +50% más valiosos y pesca doble activa`,
+          `rod`,
+          4200
+        )
+      } else if (e === `fertilizer`) {
+        ;(this.palms.regrowAll(),
+          this.sound.found(),
+          this.hud.toast(`¡Todas las palmeras de la isla han rebrotado!`, `palm`, 3800))
+      } else if (e === `wood_bundle`) {
+        ;(this.inventory.addWood(15),
+          this.hud.toast(`¡Recibiste 15 troncos de madera!`, `wood`, 3200))
+      } else if (e === `stone_bundle`) {
+        ;(this.inventory.addStone(10),
+          this.quarry.taken.clear(),
+          this.hud.toast(`¡Recibiste 10 piedras y las rocas se han renovado!`, `stone`, 3600))
+      }
+      ;(this.hud.renderUpgrades(), this.autosave?.schedule())
     }
     byeGil() {
       let e = this.fisherman
@@ -7439,7 +7580,7 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
       }
     }
     startOver() {
-      ;(this.autosave?.stop(), Bn())
+      ;(this.autosave?.stop(), Bn(), resetUpgradeState())
       try {
         let e = []
         for (let t = 0; t < localStorage.length; t++) {

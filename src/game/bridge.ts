@@ -125,3 +125,4 @@ export function useGame(): { game: LighthouseGame | null; state: GameSnapshot } 
 
   return { game, state }
 }
+

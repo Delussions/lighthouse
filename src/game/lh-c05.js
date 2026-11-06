@@ -112,6 +112,7 @@ import {
   RECIPES as zr,
   getRecipe as Br,
   WORLD_CONFIG,
+  getUpgradeLevel,
 } from './data/index'
 var ot = class extends je {
   constructor(e) {
@@ -4679,6 +4680,16 @@ if (abs(aWing) > 0.5) {
     addCoins(e) {
       ;((this.coins += e), this.emit())
     }
+    spendCoins(e) {
+      return this.creative
+        ? !0
+        : this.coins >= e
+          ? ((this.coins -= e), this.emit(), !0)
+          : !1
+    }
+    upgradePockets(e = 4) {
+      ;((this.pockets += e), this.emit())
+    }
     spendWood(e) {
       return this.spend({ wood: e })
     }
@@ -4790,7 +4801,10 @@ if (abs(aWing) > 0.5) {
           (this.rod = e.rod === !0),
           (this.benches = r(e.benches) ? Math.floor(e.benches) : 0),
           (this.bonfires = r(e.bonfires) ? Math.floor(e.bonfires) : 0),
-          (this.pockets = r(e.pockets, 12) ? Math.floor(e.pockets) : 12))
+          (this.pockets = Math.max(
+            12 + getUpgradeLevel(`pack_upgrade`) * 4,
+            r(e.pockets, 12) ? Math.floor(e.pockets) : 12
+          )))
         for (let t of Array.isArray(e.fish) ? e.fish : [])
           Array.isArray(t) &&
             Fr(t[0]) &&
@@ -5137,7 +5151,7 @@ if (abs(aWing) > 0.5) {
     land(e, t) {
       if (e.state !== `standing`) return
       e.hits++
-      let n = e.hits >= 3,
+      let n = e.hits >= Math.max(1, 3 - getUpgradeLevel(`axe_upgrade`)),
         r = new M(t.z, 0, -t.x),
         i = e.base
           .clone()
@@ -5314,9 +5328,10 @@ if (abs(aWing) > 0.5) {
     }
     burst(e) {
       e.pivot.updateMatrixWorld(!0)
-      let t = e.crownLocal.clone().applyMatrix4(e.pivot.matrixWorld)
-      for (let n = 0; n < 5; n++) {
-        let r = e.cutPoint.clone().lerp(t, 0.15 + (0.65 * n) / 4)
+      let t = e.crownLocal.clone().applyMatrix4(e.pivot.matrixWorld),
+        rLogs = 5 + getUpgradeLevel(`axe_upgrade`) * 2
+      for (let n = 0; n < rLogs; n++) {
+        let r = e.cutPoint.clone().lerp(t, 0.15 + (0.65 * n) / Math.max(1, rLogs - 1))
         ;((r.y = Math.max(this.island.height(r.x, r.z), 0) + 0.25),
           this.fx.dust(r, 0.3, 6),
           this.spawnLog(r, n))
@@ -5439,8 +5454,9 @@ var ti = [new p(`#B8B2A6`), new p(`#A69F92`), new p(`#D2CCC0`)],
       e && ((this.swing = new Hr(e)), this.group.add(this.swing.holder))
     }
     left(e) {
-      let t = this.taken.get(e)
-      return t && t.day === this.workDay() ? Math.max(0, 3 - t.n) : 3
+      let t = this.taken.get(e),
+        n = 3 + getUpgradeLevel(`pickaxe_upgrade`) * 3
+      return t && t.day === this.workDay() ? Math.max(0, n - t.n) : n
     }
     pick(e, t) {
       let n = this.rig.rayFrom(e, t),

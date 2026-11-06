@@ -81,3 +81,4 @@ export const PHASE_LABELS: Record<TimePhase, string> = {
   night: 'Es de noche',
   dawn: 'Está amaneciendo',
 }
+

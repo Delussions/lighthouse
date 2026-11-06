@@ -3,3 +3,6 @@ export * from './recipes'
 export * from './tools'
 export * from './dialogs'
 export * from './world'
+export * from './upgrades'
+
+
