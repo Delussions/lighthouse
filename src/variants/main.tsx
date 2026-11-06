@@ -37,12 +37,14 @@ function start() {
   document.title = 'Lighthouse'
   document
     .querySelector('meta[name="viewport"]')
-    ?.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover')
+    ?.setAttribute(
+      'content',
+      'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover'
+    )
 
   const style = document.createElement('style')
   style.textContent = css
   document.head.append(style)
-
   ;(globalThis as any).__lhIconUrl = (name: string) => icons[name] ?? ''
 
   const models = import('../game/models')
@@ -55,7 +57,10 @@ function start() {
       const bytes = glb(name)
       if (!bytes) return new Response(null, { status: 404 })
       return new Response(bytes as BodyInit, {
-        headers: { 'Content-Type': 'model/gltf-binary', 'Content-Length': String(bytes.byteLength) },
+        headers: {
+          'Content-Type': 'model/gltf-binary',
+          'Content-Length': String(bytes.byteLength),
+        },
       })
     })
   }
