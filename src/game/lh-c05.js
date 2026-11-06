@@ -2939,6 +2939,7 @@ var Tn = 150,
 function kn() {
   if (On) return On
   let e = new R({ color: `#88AD5B`, roughness: 0.75, metalness: 0, side: 2 })
+  wn.add(e)
   return (
     (On = Je(e, {
       key: `leaf`,
@@ -6611,28 +6612,146 @@ var mi = 0.2,
     buildShoreMesh(e) {
       let t = new D()
       if (e === `driftwood` && this.logTemplate) {
-        let e = this.logTemplate.clone(!0)
-        return (e.scale.setScalar(1.55), t.add(e), t)
-      }
-      if (e === `crate`) {
-        let e = new i(new se(0.46, 0.38, 0.46), new R({ color: `#C98B4B`, roughness: 0.75 })),
-          n = new i(new se(0.5, 0.08, 0.5), new R({ color: `#8E5A2B`, roughness: 0.8 }))
-        return ((e.position.y = 0.19), (n.position.y = 0.34), t.add(e, n), t)
-      }
-      if (e === `bottle`) {
-        let e = new i(new de(0.06, 0.11, 0.34, 10), new R({ color: `#66C9BA`, roughness: 0.3 })),
-          n = new i(new de(0.045, 0.045, 0.09, 8), new R({ color: `#C89458`, roughness: 0.8 }))
+        let e = this.logTemplate.clone(!0),
+          n = this.logTemplate.clone(!0),
+          r = lhMat(`Rock`, `#B5AFA4`, 0.9)
         return (
-          (e.position.y = 0.14),
-          (n.position.y = 0.33),
+          e.scale.setScalar(1.55),
+          n.scale.set(0.95, 0.85, 0.95),
+          n.position.set(0.14, 0.04, 0.16),
+          n.rotation.set(0.18, 0.82, -0.14),
+          lhAdd(t, lhCobble(0.09, 0.055, 0.08, 3), r, -0.18, 0.03, 0.14),
+          lhAdd(t, lhCobble(0.065, 0.04, 0.06, 7), r, 0.2, 0.025, -0.12),
           t.add(e, n),
-          (t.rotation.z = 0.95),
+          Mn(t),
           t
         )
       }
-      let n = new i(new Fe(0.2, 12, 10), new R({ color: `#FF947E`, roughness: 0.5 })),
-        r = new i(new Fe(0.11, 10, 8), new R({ color: `#FFF5E4`, roughness: 0.4 }))
-      return ((n.scale.set(1.2, 0.65, 1)), (n.position.y = 0.1), (r.position.set(0.05, 0.18, 0)), t.add(n, r), t)
+      if (e === `crate`) {
+        let e = lhMat(`Bench_Wood`, `#CF9153`, 0.78),
+          n = lhMat(`Bench_WoodDark`, `#875429`, 0.84),
+          r = lhMat(`Boat_Rail`, `#C18245`, 0.8),
+          a = lhMat(`Bench_Metal`, `#433C37`, 0.55),
+          o = lhMat(`LH_Brass`, `#DDA94B`, 0.35),
+          s = new D()
+        ;(lhAdd(s, lhBevelBox(0.41, 0.31, 0.41, 0.014), e, 0, 0.185, 0),
+          [-0.195, 0.195].forEach((e) => {
+            ;[-0.195, 0.195].forEach((t) => {
+              ;(lhAdd(s, lhBevelBox(0.055, 0.35, 0.055, 0.01), n, e, 0.19, t),
+                lhAdd(s, lhBevelBox(0.066, 0.045, 0.066, 0.008), a, e, 0.34, t),
+                lhAdd(s, lhBevelBox(0.066, 0.045, 0.066, 0.008), a, e, 0.05, t),
+                lhAdd(s, lhCobble(0.016, 0.016, 0.016, 2), o, e * 1.06, 0.34, t * 1.06))
+            })
+            ;(lhAdd(s, lhBevelBox(0.44, 0.045, 0.048, 0.009), n, 0, 0.045, e),
+              lhAdd(s, lhBevelBox(0.44, 0.045, 0.048, 0.009), n, 0, 0.33, e),
+              lhAdd(s, lhBevelBox(0.048, 0.045, 0.44, 0.009), r, e, 0.045, 0),
+              lhAdd(s, lhBevelBox(0.048, 0.045, 0.44, 0.009), r, e, 0.33, 0),
+              lhAdd(s, lhBevelBox(0.38, 0.036, 0.028, 0.007), n, 0, 0.19, e * 1.02, 0, 0, e > 0 ? 0.62 : -0.62))
+          }),
+          [-0.14, 0, 0.14].forEach((t, n) => {
+            lhAdd(s, lhBevelBox(0.45, 0.032, 0.125, 0.008, { archY: 0.004 }), n === 1 ? r : e, 0, 0.365, t)
+          }),
+          [-0.225, 0.225].forEach((e) => {
+            lhAdd(s, lhBevelBox(0.026, 0.03, 0.16, 0.008, { archZ: -0.012 }), n, e, 0.24, 0)
+          }),
+          s.rotation.set(0.07, 0.12, -0.06),
+          t.add(s),
+          Mn(t))
+        return t
+      }
+      if (e === `bottle`) {
+        let e = lhMat(`LH_Window`, `#70D4C4`, 0.18, 0.05),
+          n = lhMat(`Bench_Wood`, `#C98E54`, 0.85),
+          r = lhMat(`LH_White`, `#FFF5DC`, 0.75),
+          a = lhMat(`Boat_Red`, `#DF4E42`, 0.6),
+          o = new D(),
+          s = lhLathe(
+            [
+              [0.088, 0.01],
+              [0.105, 0.04],
+              [0.108, 0.17],
+              [0.095, 0.23],
+              [0.048, 0.28],
+              [0.042, 0.35],
+              [0.054, 0.365],
+              [0.054, 0.382],
+              [0.038, 0.388],
+            ],
+            16,
+            0.85
+          ),
+          c = lhLathe(
+            [
+              [0.032, 0.35],
+              [0.041, 0.435],
+              [0.036, 0.445],
+            ],
+            12,
+            0.82
+          ),
+          l = lhLathe(
+            [
+              [0.028, 0.045],
+              [0.031, 0.21],
+            ],
+            12,
+            0.9
+          ),
+          u = lhLathe(
+            [
+              [0.035, 0.115],
+              [0.035, 0.14],
+            ],
+            12,
+            0.9
+          )
+        return (
+          lhAdd(o, s, e),
+          lhAdd(o, c, n),
+          lhAdd(o, l, r, 0.008, 0, 0, 0.08, 0, -0.14),
+          lhAdd(o, u, a, 0.008, 0, 0, 0.08, 0, -0.14),
+          (o.position.y = 0.09),
+          o.rotation.set(0.18, 0.25, 1.08),
+          t.add(o),
+          Mn(t),
+          t
+        )
+      }
+      let n = lhMat(`LH_White`, `#FF9A84`, 0.48),
+        r = lhMat(`LH_White`, `#FFF3E2`, 0.42),
+        a = lhMat(`Boat_Red`, `#FF735E`, 0.55),
+        o = lhMat(`Rock`, `#B7B0A4`, 0.88),
+        s = lhLathe(
+          [
+            [0.025, 0],
+            [0.085, 0.04],
+            [0.145, 0.095],
+            [0.115, 0.115],
+            [0.165, 0.165],
+            [0.125, 0.185],
+            [0.135, 0.235],
+            [0.085, 0.255],
+            [0.09, 0.295],
+            [0.045, 0.34],
+            [0.012, 0.39],
+          ],
+          16,
+          0.82
+        ),
+        c = lhBakeAO(Wn(), 0.84, 1),
+        l = lhBakeAO(Un(), 0.84, 1),
+        u = lhAdd(t, s, n, -0.02, 0.11, 0.02, 0.38, 0.24, -1.12),
+        d = lhAdd(t, c, r, 0.06, 0.06, 0.07, -0.18, 0.5, 0.1),
+        f = lhAdd(t, l, a, -0.11, 0.035, -0.07, 0.08, 0.9, -0.06)
+      return (
+        u.scale.set(1.08, 1, 0.86),
+        d.scale.setScalar(1.45),
+        f.scale.setScalar(0.95),
+        lhAdd(t, lhCobble(0.085, 0.042, 0.075, 5), o, 0.09, 0.02, -0.08),
+        lhAdd(t, lhCobble(0.06, 0.032, 0.055, 11), o, -0.08, 0.018, 0.1),
+        Mn(t),
+        t
+      )
     }
     spawnShoreFind() {
       let e = this.list.filter((e) => e.state === `here` && e.id !== `axe` && e.id !== `log`)
@@ -6909,6 +7028,132 @@ function ki() {
       }`,
   })
 }
+function lhMat(e, t, n = 0.8, r = 0, i = {}) {
+  let a = new R({ color: t, roughness: n, metalness: r, vertexColors: !0, ...i })
+  return ((a.name = e), a)
+}
+function lhBakeAO(e, t = 0.78, n = 1) {
+  let r = e.getAttribute(`position`),
+    i = r.count,
+    a = new Float32Array(i * 3),
+    o = 1 / 0,
+    s = -1 / 0
+  for (let e = 0; e < i; e++) {
+    let t = r.getY(e)
+    ;(t < o && (o = t), t > s && (s = t))
+  }
+  let c = Math.max(1e-4, s - o)
+  for (let e = 0; e < i; e++) {
+    let s = (r.getY(e) - o) / c,
+      l = t + (n - t) * Math.min(1, Math.max(0, s))
+    a[e * 3] = a[e * 3 + 1] = a[e * 3 + 2] = l
+  }
+  return (e.setAttribute(`color`, new C(a, 3)), e)
+}
+function lhBevelBox(e, t, n, r = 0.016, i = {}) {
+  let a = new se(e, t, n, 4, 4, 4),
+    o = a.getAttribute(`position`),
+    s = a.getAttribute(`normal`),
+    c = o.count,
+    l = Math.min(r, e * 0.35, t * 0.35, n * 0.35),
+    u = Math.max(0.001, e / 2 - l),
+    d = Math.max(0.001, t / 2 - l),
+    f = Math.max(0.001, n / 2 - l),
+    p = (e, t, n) => {
+      let r = e / (t || 1)
+      return Math.abs(r) < 0.1 ? 0 : Math.sign(r) * (Math.abs(r) < 0.75 ? n : n + l)
+    }
+  for (let r = 0; r < c; r++) {
+    let a = p(o.getX(r), e / 2, u),
+      m = p(o.getY(r), t / 2, d),
+      h = p(o.getZ(r), n / 2, f),
+      g = Math.max(-u, Math.min(u, a)),
+      _ = Math.max(-d, Math.min(d, m)),
+      v = Math.max(-f, Math.min(f, h)),
+      y = a - g,
+      b = m - _,
+      x = h - v,
+      S = Math.hypot(y, b, x) || 1,
+      C = g + (y / S) * l,
+      w = _ + (b / S) * l,
+      T = v + (x / S) * l
+    if (i.taper) {
+      let e = (w + t / 2) / (t || 1),
+        n = 1 + (i.taper - 1) * e
+      ;((C *= n), (T *= n))
+    }
+    if (i.archY) {
+      let t = C / (e / 2 || 1)
+      w += i.archY * (1 - t * t)
+    }
+    if (i.archZ) {
+      let e = T / (n / 2 || 1)
+      w += i.archZ * (1 - e * e)
+    }
+    if (i.curveZ) {
+      let t = C / (e / 2 || 1)
+      T += i.curveZ * (1 - t * t)
+    }
+    ;(o.setXYZ(r, C, w, T), s.setXYZ(r, y / S, b / S, x / S))
+  }
+  return lhBakeAO(a, i.aoMin ?? 0.78, i.aoMax ?? 1)
+}
+function lhLathe(e, t = 14, n = 0.78) {
+  let r = [0, e[0][1], 0],
+    i = []
+  for (let [n, i] of e)
+    for (let e = 0; e < t; e++) {
+      let a = (e / t) * Math.PI * 2
+      r.push(Math.cos(a) * n, i, Math.sin(a) * n)
+    }
+  let a = 1 + e.length * t
+  r.push(0, e[e.length - 1][1], 0)
+  for (let e = 0; e < t; e++) {
+    let n = (e + 1) % t
+    i.push(0, 1 + e, 1 + n)
+  }
+  for (let n = 0; n < e.length - 1; n++) {
+    let r = 1 + n * t,
+      a = r + t
+    for (let e = 0; e < t; e++) {
+      let n = (e + 1) % t
+      i.push(r + e, a + e, r + n, r + n, a + e, a + n)
+    }
+  }
+  let o = 1 + (e.length - 1) * t
+  for (let e = 0; e < t; e++) {
+    let n = (e + 1) % t
+    i.push(o + e, a, o + n)
+  }
+  let s = new v()
+  return (
+    s.setAttribute(`position`, new C(new Float32Array(r), 3)),
+    s.setIndex(i),
+    s.computeVertexNormals(),
+    lhBakeAO(s, n, 1)
+  )
+}
+function lhCobble(e, t, n, r = 1) {
+  let i = new Fe(1, 10, 8),
+    a = i.getAttribute(`position`),
+    o = a.count
+  for (let i = 0; i < o; i++) {
+    let o = a.getX(i),
+      s = a.getY(i),
+      c = a.getZ(i),
+      l =
+        1 +
+        0.12 * Math.sin(o * 3.7 + r * 1.9) * Math.cos(c * 3.3 - r * 1.1) +
+        0.07 * Math.cos(s * 4.5 + o * 2.3 + r * 2.7),
+      u = s < 0 ? s * 0.65 : s
+    a.setXYZ(i, o * e * l, u * t * l, c * n * l)
+  }
+  return (i.computeVertexNormals(), lhBakeAO(i, 0.74, 1))
+}
+function lhAdd(e, t, n, r = 0, a = 0, o = 0, s = 0, c = 0, l = 0) {
+  let u = new i(t, n)
+  return (u.position.set(r, a, o), (s || c || l) && u.rotation.set(s, c, l), e.add(u), u)
+}
 var Hi = class extends vi {
     constructor(e, t, n, r, i, a) {
       super(
@@ -6932,23 +7177,58 @@ var Hi = class extends vi {
     buildModel() {
       let e = new D()
       e.name = `Seat`
-      let t = new R({ color: `#8E5B3A`, roughness: 0.85 }),
-        n = new R({ color: `#DF9F60`, roughness: 0.78 }),
-        r = new R({ color: `#C9894C`, roughness: 0.8 }),
-        a = new i(new se(0.11, 0.34, 0.42), t),
-        o = new i(new se(0.11, 0.34, 0.42), t)
-      ;((a.position.set(-0.32, 0.17, 0)), (o.position.set(0.32, 0.17, 0)))
-      let s = new i(new se(0.82, 0.08, 0.44), n)
-      s.position.set(0, 0.34, 0.02)
-      let c = new i(new se(0.8, 0.14, 0.08), r),
-        l = new i(new se(0.8, 0.12, 0.08), n)
-      ;((c.position.set(0, 0.48, -0.15)), (l.position.set(0, 0.63, -0.17)))
-      let u = new i(new se(0.1, 0.14, 0.42), t),
-        d = new i(new se(0.1, 0.14, 0.42), t)
+      let t = lhMat(`Bench_WoodDark`, `#7E4F2F`, 0.84),
+        n = lhMat(`Bench_Wood`, `#DFA060`, 0.76),
+        r = lhMat(`Bench_Wood`, `#CF8D4E`, 0.78),
+        a = lhMat(`Boat_Rail`, `#C68446`, 0.78),
+        o = lhMat(`Bench_Metal`, `#3E3833`, 0.55),
+        s = lhMat(`LH_Brass`, `#DDA94B`, 0.35),
+        c = lhMat(`Rock`, `#B3ADA2`, 0.9)
+      ;[-0.33, 0.33].forEach((i) => {
+        ;(lhAdd(e, lhCobble(0.075, 0.03, 0.075, i > 0 ? 2 : 5), c, i, 0.015, 0.16),
+          lhAdd(e, lhCobble(0.075, 0.03, 0.075, i > 0 ? 7 : 9), c, i, 0.015, -0.16),
+          lhAdd(e, lhBevelBox(0.105, 0.052, 0.46, 0.014), t, i, 0.036, 0),
+          lhAdd(e, lhBevelBox(0.082, 0.31, 0.082, 0.014, { taper: 0.88 }), t, i, 0.19, 0.15, -0.06, 0, 0),
+          lhAdd(e, lhBevelBox(0.084, 0.65, 0.084, 0.014, { taper: 0.82 }), t, i, 0.35, -0.15, -0.15, 0, 0),
+          lhAdd(e, lhBevelBox(0.076, 0.058, 0.44, 0.012), a, i, 0.315, 0.01),
+          lhAdd(e, lhBevelBox(0.072, 0.16, 0.068, 0.012), t, i, 0.39, 0.17, 0.05, 0, 0),
+          lhAdd(e, lhBevelBox(0.112, 0.046, 0.47, 0.014, { archZ: 0.014 }), a, i, 0.465, 0.02, -0.03, 0, 0),
+          lhAdd(e, lhBevelBox(0.055, 0.18, 0.055, 0.01), t, i * 0.9, 0.22, 0.02, 0, 0, i > 0 ? 0.65 : -0.65),
+          lhAdd(e, lhBevelBox(0.092, 0.036, 0.092, 0.008), o, i, 0.31, 0.15),
+          lhAdd(e, lhBevelBox(0.092, 0.036, 0.092, 0.008), o, i, 0.31, -0.13),
+          lhAdd(e, lhCobble(0.016, 0.012, 0.016, 1), s, i, 0.492, 0.17),
+          lhAdd(e, lhCobble(0.016, 0.012, 0.016, 2), s, i, 0.492, -0.14))
+      })
+      lhAdd(e, lhBevelBox(0.68, 0.052, 0.068, 0.012), r, 0, 0.14, -0.02)
+      ;[
+        [-0.105, r, -0.03],
+        [-0.005, n, 0],
+        [0.095, r, 0.02],
+        [0.192, n, 0.05],
+      ].forEach(([t, a, o]) => {
+        ;(lhAdd(e, lhBevelBox(0.86, 0.04, 0.088, 0.011, { archY: 0.007 }), a, 0, 0.348, t, o, 0, 0),
+          lhAdd(e, lhCobble(0.013, 0.01, 0.013, 3), s, -0.33, 0.37, t),
+          lhAdd(e, lhCobble(0.013, 0.01, 0.013, 4), s, 0.33, 0.37, t))
+      })
+      ;(lhAdd(e, lhBevelBox(0.85, 0.092, 0.038, 0.011, { archY: 0.012, curveZ: -0.022 }), r, 0, 0.49, -0.17, -0.15, 0, 0),
+        lhAdd(e, lhBevelBox(0.86, 0.095, 0.038, 0.011, { archY: 0.016, curveZ: -0.024 }), n, 0, 0.605, -0.19, -0.15, 0, 0),
+        lhAdd(e, lhBevelBox(0.88, 0.046, 0.05, 0.014, { archY: 0.02, curveZ: -0.025 }), t, 0, 0.675, -0.205, -0.15, 0, 0),
+        [-0.33, 0.33].forEach((t) => {
+          ;(lhAdd(e, lhCobble(0.015, 0.015, 0.012, 5), s, t, 0.49, -0.145),
+            lhAdd(e, lhCobble(0.015, 0.015, 0.012, 6), s, t, 0.605, -0.165))
+        }))
+      let l = lhLathe(
+        [
+          [0.048, -0.018],
+          [0.062, 0],
+          [0.048, 0.018],
+        ],
+        12,
+        0.84
+      )
       return (
-        (u.position.set(-0.34, 0.43, 0)),
-        (d.position.set(0.34, 0.43, 0)),
-        e.add(a, o, s, c, l, u, d),
+        lhAdd(e, l, r, 0.395, 0.41, 0.08, 0, 0, Math.PI / 2),
+        lhAdd(e, lhBevelBox(0.03, 0.024, 0.08, 0.006), s, 0.39, 0.45, 0.08),
         e
       )
     }
@@ -6978,26 +7258,99 @@ var Hi = class extends vi {
     buildModel() {
       let e = new D()
       e.name = `Lantern`
-      let t = new R({ color: `#A8A298`, roughness: 0.9 }),
-        n = new R({ color: `#7B5032`, roughness: 0.85 }),
-        r = new R({ color: `#433A34`, roughness: 0.65 }),
-        a = new R({
-          color: `#FFE494`,
+      let t = lhMat(`LH_Stone`, `#ABA59B`, 0.88),
+        n = lhMat(`Rock`, `#9B958B`, 0.9),
+        r = lhMat(`LH_Wood`, `#7D5132`, 0.82),
+        a = lhMat(`Bench_WoodDark`, `#684125`, 0.85),
+        o = lhMat(`LH_Metal`, `#3D3632`, 0.55),
+        s = lhMat(`LH_Brass`, `#DDA748`, 0.35),
+        c = lhMat(`Lantern_Glass`, `#FFE494`, 0.22, 0, {
           emissive: new p(`#FFB448`),
           emissiveIntensity: 2.2,
-          roughness: 0.25,
-        })
-      a.name = `Lantern_Glass`
-      let o = new i(new de(0.2, 0.24, 0.14, 10), t)
-      o.position.y = 0.07
-      let s = new i(new de(0.06, 0.075, 0.84, 8), n)
-      s.position.y = 0.52
-      let c = new i(new de(0.18, 0.06, 0.1, 8), r)
-      c.position.y = 0.98
-      let l = new i(new de(0.13, 0.11, 0.24, 10), a)
-      l.position.y = 0.84
-      let u = new i(new de(0.14, 0.14, 0.05, 8), r)
-      return ((u.position.y = 0.71), e.add(o, s, c, l, u), e)
+        }),
+        l = lhLathe(
+          [
+            [0.24, 0],
+            [0.23, 0.06],
+            [0.195, 0.075],
+            [0.185, 0.135],
+            [0.135, 0.155],
+            [0.115, 0.18],
+          ],
+          8,
+          0.76
+        )
+      ;(lhAdd(e, l, t),
+        [
+          [0.18, 0.035, 0.14, 0.075, 0.048, 0.068, 1],
+          [-0.19, 0.03, 0.11, 0.068, 0.042, 0.062, 4],
+          [0.12, 0.028, -0.18, 0.062, 0.038, 0.058, 7],
+          [-0.14, 0.032, -0.15, 0.07, 0.045, 0.065, 11],
+        ].forEach(([t, r, i, a, o, s, c]) => {
+          lhAdd(e, lhCobble(a, o, s, c), n, t, r, i)
+        }),
+        lhAdd(e, lhBevelBox(0.125, 0.56, 0.125, 0.022, { taper: 0.78 }), r, 0, 0.43, 0),
+        [-0.085, 0.085].forEach((t) => {
+          ;(lhAdd(e, lhBevelBox(0.048, 0.15, 0.052, 0.01), a, t, 0.21, 0, 0, 0, t > 0 ? 0.35 : -0.35),
+            lhAdd(e, lhBevelBox(0.052, 0.15, 0.048, 0.01), a, 0, 0.21, t, t > 0 ? -0.35 : 0.35, 0, 0))
+        }),
+        lhAdd(e, lhBevelBox(0.138, 0.036, 0.138, 0.008), o, 0, 0.32, 0),
+        lhAdd(e, lhBevelBox(0.118, 0.034, 0.118, 0.008), o, 0, 0.64, 0))
+      let u = lhLathe(
+          [
+            [0.075, 0.68],
+            [0.145, 0.705],
+            [0.155, 0.735],
+            [0.125, 0.755],
+          ],
+          12,
+          0.84
+        ),
+        d = lhLathe(
+          [
+            [0.108, 0.75],
+            [0.138, 0.81],
+            [0.142, 0.87],
+            [0.115, 0.935],
+          ],
+          14,
+          0.96
+        ),
+        f = lhLathe(
+          [
+            [0.13, 0.93],
+            [0.205, 0.955],
+            [0.19, 0.975],
+            [0.115, 1.02],
+            [0.078, 1.04],
+            [0.085, 1.075],
+            [0.055, 1.095],
+            [0.022, 1.135],
+          ],
+          12,
+          0.84
+        ),
+        m = lhLathe(
+          [
+            [0.195, 0.952],
+            [0.212, 0.962],
+            [0.195, 0.972],
+          ],
+          12,
+          0.88
+        )
+      ;(lhAdd(e, u, s), lhAdd(e, d, c), lhAdd(e, f, o), lhAdd(e, m, s))
+      for (let t = 0; t < 6; t++) {
+        let n = (t / 6) * Math.PI * 2,
+          r = Math.cos(n) * 0.142,
+          i = Math.sin(n) * 0.142
+        ;(lhAdd(e, lhBevelBox(0.016, 0.2, 0.016, 0.004), s, r, 0.845, i),
+          lhAdd(e, lhCobble(0.013, 0.013, 0.013, t + 1), s, r * 0.82, 0.64, i * 0.82))
+      }
+      return (
+        lhAdd(e, lhBevelBox(0.09, 0.022, 0.022, 0.006, { archY: 0.035 }), s, 0, 1.145, 0),
+        e
+      )
     }
     setupLantern(e, t) {
       t.colorIdx = 0
@@ -7065,34 +7418,74 @@ var Hi = class extends vi {
     buildModel() {
       let e = new D()
       e.name = `Planter`
-      let t = new R({ color: `#B87842`, roughness: 0.85 }),
-        n = new R({ color: `#6E482A`, roughness: 0.95 }),
-        r = new R({ color: `#58B847`, roughness: 0.8 }),
-        a = new R({ color: `#72CF5E`, roughness: 0.78 }),
-        o = new R({ color: `#FF5964`, roughness: 0.4 }),
-        s = new R({ color: `#FFC43D`, roughness: 0.4 }),
-        c = new i(new se(0.76, 0.34, 0.76), t),
-        l = new i(new se(0.66, 0.08, 0.66), n)
-      ;((c.position.y = 0.17), (l.position.y = 0.32))
-      let u = new i(new Fe(0.24, 12, 10), r),
-        d = new i(new Fe(0.2, 12, 10), a),
-        f = new i(new Fe(0.19, 10, 8), r)
-      ;((u.position.set(-0.08, 0.48, 0.04)),
-        (d.position.set(0.1, 0.54, -0.05)),
-        (f.position.set(0.04, 0.45, 0.12)))
-      let m = new D()
-      m.name = `Berries`
-      ;[
-        [-0.16, 0.56, 0.14, o],
-        [0.14, 0.64, 0.04, s],
-        [0.02, 0.58, -0.16, o],
-        [0.18, 0.49, 0.16, o],
-        [-0.06, 0.66, -0.02, s],
-      ].forEach(([e, t, n, r]) => {
-        let a = new i(new Fe(0.068, 8, 8), r)
-        ;(a.position.set(e, t, n), m.add(a))
+      let t = lhMat(`Bench_Wood`, `#C8854A`, 0.78),
+        n = lhMat(`Boat_Rail`, `#BA783E`, 0.8),
+        r = lhMat(`Bench_WoodDark`, `#7A4C2A`, 0.85),
+        a = lhMat(`Bench_Metal`, `#3E3833`, 0.55),
+        o = lhMat(`LH_Brass`, `#DDA94B`, 0.35),
+        s = lhMat(`Bonfire_End`, `#5D3C22`, 0.95),
+        c = lhMat(`Rock`, `#ACA59A`, 0.88),
+        l = lhMat(`Rock_Moss`, `#58A846`, 0.82),
+        u = lhMat(`Bench_Red`, `#E94855`, 0.35),
+        d = lhMat(`Bench_Red`, `#FF7166`, 0.38),
+        f = lhMat(`LH_White`, `#FFC842`, 0.35),
+        m = lhMat(`LH_White`, `#FFF6DD`, 0.55)
+      ;[-0.33, 0.33].forEach((e_x) => {
+        ;[-0.33, 0.33].forEach((e_z) => {
+          ;(lhAdd(e, lhBevelBox(0.095, 0.37, 0.095, 0.016), r, e_x, 0.185, e_z),
+            lhAdd(e, lhBevelBox(0.114, 0.036, 0.114, 0.012, { archY: 0.008 }), t, e_x, 0.382, e_z),
+            lhAdd(e, lhBevelBox(0.106, 0.042, 0.106, 0.008), a, e_x, 0.31, e_z),
+            lhAdd(e, lhBevelBox(0.106, 0.042, 0.106, 0.008), a, e_x, 0.08, e_z),
+            lhAdd(e, lhCobble(0.015, 0.015, 0.015, 1), o, e_x * 1.08, 0.31, e_z * 1.08))
+        })
       })
-      return (e.add(c, l, u, d, f, m), e)
+      ;[0.08, 0.18, 0.28].forEach((a_y, i_y) => {
+        let o_w = i_y % 2 ? n : t
+        ;[-0.33, 0.33].forEach((s_p) => {
+          ;(lhAdd(e, lhBevelBox(0.58, 0.094, 0.044, 0.011), o_w, 0, a_y, s_p),
+            lhAdd(e, lhBevelBox(0.044, 0.094, 0.58, 0.011), n, s_p, a_y, 0))
+        })
+      })
+      ;[-0.33, 0.33].forEach((r_p) => {
+        ;(lhAdd(e, lhBevelBox(0.62, 0.036, 0.072, 0.01), t, 0, 0.35, r_p),
+          lhAdd(e, lhBevelBox(0.072, 0.036, 0.62, 0.01), n, r_p, 0.35, 0))
+      })
+      ;(lhAdd(e, lhCobble(0.31, 0.085, 0.31, 4), s, 0, 0.31, 0),
+        [
+          [-0.19, 0.34, 0.18, 0.055, 2],
+          [0.2, 0.34, 0.16, 0.048, 5],
+          [-0.17, 0.34, -0.19, 0.052, 8],
+          [0.18, 0.34, -0.17, 0.045, 11],
+        ].forEach(([t, n, r, i, a]) => {
+          lhAdd(e, lhCobble(i, i * 0.65, i * 0.9, a), c, t, n, r)
+        }),
+        lhAdd(e, lhCobble(0.23, 0.19, 0.22, 14), l, -0.09, 0.46, 0.05),
+        lhAdd(e, lhCobble(0.21, 0.21, 0.2, 23), l, 0.1, 0.51, -0.05),
+        lhAdd(e, lhCobble(0.19, 0.17, 0.19, 31), l, 0.04, 0.44, 0.13),
+        An(e, `Rock_Moss`, 77))
+      let h = new D()
+      return (
+        (h.name = `Berries`),
+        [
+          [-0.16, 0.56, 0.13, u, f, 1],
+          [0.14, 0.64, 0.03, f, u, 2],
+          [0.01, 0.58, -0.16, u, d, 3],
+          [0.17, 0.49, 0.16, d, f, 4],
+          [-0.06, 0.65, -0.02, f, u, 5],
+          [-0.18, 0.51, -0.09, u, d, 6],
+        ].forEach(([e, t, n, a, o, s]) => {
+          let c = new D()
+          ;(c.position.set(e, t, n),
+            lhAdd(c, lhBevelBox(0.018, 0.06, 0.018, 0.004), r, 0, -0.01, 0, 0.2, s, -0.15),
+            lhAdd(c, lhCobble(0.052, 0.056, 0.052, s * 3), a, 0, 0.015, 0),
+            lhAdd(c, lhCobble(0.042, 0.045, 0.042, s * 5), o, 0.038, -0.005, 0.024),
+            lhAdd(c, lhCobble(0.038, 0.04, 0.038, s * 7), a, -0.032, -0.01, -0.022),
+            lhAdd(c, lhCobble(0.022, 0.014, 0.022, s * 9), m, 0.015, 0.052, -0.015),
+            h.add(c))
+        }),
+        e.add(h),
+        e
+      )
     }
     setupPlanter(e, t) {
       t.growTimer = 22
@@ -7163,18 +7556,102 @@ var Hi = class extends vi {
     buildModel() {
       let e = new D()
       e.name = `CrabTrap`
-      let t = new R({ color: `#C88B52`, roughness: 0.82 }),
-        n = new R({ color: `#7A4E28`, roughness: 0.88 }),
-        r = new R({ color: `#E85A4F`, roughness: 0.5 }),
-        a = new R({ color: `#FFF8EC`, roughness: 0.5 }),
-        o = new i(new se(0.68, 0.34, 0.52), t),
-        s = new i(new se(0.72, 0.06, 0.56), n)
-      ;((o.position.y = 0.17), (s.position.y = 0.34))
-      let c = new D()
-      c.name = `Buoy`
-      let l = new i(new Fe(0.11, 10, 8), r),
-        u = new i(new de(0.115, 0.115, 0.05, 10), a)
-      return ((c.position.y = 0.55), c.add(l, u), e.add(o, s, c), e)
+      let t = lhMat(`Boat_Rail`, `#CF9155`, 0.78),
+        n = lhMat(`Boat_Rail`, `#BC7E43`, 0.8),
+        r = lhMat(`Bench_Wood`, `#B4763D`, 0.82),
+        a = lhMat(`Bench_WoodDark`, `#754926`, 0.85),
+        o = lhMat(`LH_Brass`, `#DDA94B`, 0.35),
+        s = lhMat(`Rock`, `#A39C91`, 0.9),
+        c = lhMat(`Boat_Red`, `#E25247`, 0.48),
+        l = lhMat(`LH_White`, `#FFF6E8`, 0.48)
+      ;[-0.29, 0.29].forEach((t) => {
+        lhAdd(e, lhBevelBox(0.085, 0.048, 0.6, 0.013), a, t, 0.026, 0)
+      })
+      ;[-0.22, 0, 0.22].forEach((t) => {
+        lhAdd(e, lhBevelBox(0.66, 0.036, 0.095, 0.01), r, 0, 0.052, t)
+        for (let n = -3; n <= 3; n++) {
+          let r = (n / 3.4) * (Math.PI * 0.46),
+            i = Math.sin(r) * 0.29,
+            o = 0.065 + Math.cos(r) * 0.285
+          lhAdd(e, lhBevelBox(0.115, 0.038, 0.044, 0.009), a, i, o, t, 0, 0, -r)
+        }
+      })
+      for (let r = -4; r <= 4; r++) {
+        let i = (r / 4.3) * (Math.PI * 0.47),
+          a = Math.sin(i) * 0.305,
+          o = 0.065 + Math.cos(i) * 0.3,
+          s = r % 2 === 0 ? t : n
+        lhAdd(e, lhBevelBox(0.046, 0.022, 0.56, 0.006, { archZ: 0.004 }), s, a, o, 0, 0, 0, -i)
+      }
+      ;[-0.24, 0.24].forEach((t) => {
+        let n = lhLathe(
+          [
+            [0.095, -0.02],
+            [0.115, 0],
+            [0.075, 0.035],
+          ],
+          12,
+          0.8
+        )
+        ;(lhAdd(e, n, o, 0, 0.19, t, Math.PI / 2, 0, 0),
+          lhAdd(e, lhBevelBox(0.54, 0.032, 0.032, 0.008), a, 0, 0.18, t))
+      })
+      ;(lhAdd(e, lhCobble(0.082, 0.05, 0.072, 6), s, -0.16, 0.09, 0.11),
+        lhAdd(e, lhCobble(0.076, 0.046, 0.068, 12), s, 0.15, 0.088, -0.1),
+        lhAdd(e, lhBevelBox(0.14, 0.03, 0.18, 0.008), a, 0, 0.375, 0),
+        lhAdd(e, lhCobble(0.022, 0.016, 0.022, 3), o, 0, 0.395, 0),
+        lhAdd(
+          e,
+          lhLathe(
+            [
+              [0.014, 0.38],
+              [0.012, 0.54],
+            ],
+            8,
+            0.85
+          ),
+          r
+        ))
+      let u = new D()
+      u.name = `Buoy`
+      let d = lhLathe(
+          [
+            [0.024, -0.12],
+            [0.088, -0.065],
+            [0.115, 0],
+            [0.092, 0.065],
+            [0.028, 0.12],
+          ],
+          14,
+          0.86
+        ),
+        f = lhLathe(
+          [
+            [0.112, -0.036],
+            [0.12, 0],
+            [0.112, 0.036],
+          ],
+          14,
+          0.88
+        ),
+        m = lhLathe(
+          [
+            [0.056, 0.085],
+            [0.032, 0.122],
+            [0.02, 0.155],
+          ],
+          10,
+          0.9
+        )
+      return (
+        lhAdd(u, d, l),
+        lhAdd(u, f, c),
+        lhAdd(u, m, c),
+        lhAdd(u, lhBevelBox(0.024, 0.04, 0.024, 0.006), o, 0, 0.165, 0),
+        (u.position.y = 0.56),
+        e.add(u),
+        e
+      )
     }
     setupTrap(e, t) {
       t.catchTimer = 25
