@@ -83,6 +83,13 @@ import {
   x as We,
   y as Ge,
 } from './lh-c05.js'
+import {
+  HOTBAR_ITEMS as X,
+  TERRAFORM_TOOLS as wn,
+  PHASE_LABELS as En,
+  GIL_DIALOGS,
+} from './data/index'
+import { notifyGameReady } from './bridge'
 var Ke = [`day`, `sunset`, `night`, `dawn`],
   qe = [
     [0, 2],
@@ -4116,80 +4123,7 @@ var xn = 34,
       return this.active && this.choicesEl.childElementCount > 0
     }
   },
-  X = [
-    {
-      tool: `axe`,
-      icon: `axe`,
-      name: `Hacha`,
-      tip: `Tala palmeras para obtener madera — cae con tres golpes`,
-      info: `Un hacha vieja encontrada en la pradera. Tala palmeras para conseguir madera: caen con tres golpes. Mantén pulsado para seguir talando.`,
-    },
-    {
-      tool: `pickaxe`,
-      icon: `pickaxe`,
-      name: `Pico de madera`,
-      tip: `Rompe piedras de las rocas`,
-      info: `Golpea las rocas para conseguir piedras: cada roca da unas pocas al día. Mantén pulsado para seguir picando.`,
-    },
-    {
-      tool: `rod`,
-      icon: `rod`,
-      name: `Caña de pescar`,
-      tip: `Lánzala cerca de la sombra de un pez y recoge cuando pique`,
-      info: `Lánzala cerca de la sombra de un pez en el mar. ¡Espera a que el corcho se hunda y recoge rápido!`,
-    },
-    {
-      tool: `build`,
-      icon: `block`,
-      name: `Bloques de madera`,
-      tip: `Construye con ellos — la pala los recoge`,
-      info: `Construye con ellos: al ponerlos juntos se unen en una sola pieza de madera. La pala los recoge.`,
-    },
-    {
-      tool: `bench`,
-      icon: `bench`,
-      name: `Mesa de trabajo`,
-      tip: `Colócala y úsala para hacer bloques y herramientas`,
-      info: `Colócala en un buen sitio y úsala para convertir madera en bloques y fabricar herramientas.`,
-    },
-    {
-      tool: `bonfire`,
-      icon: `bonfire`,
-      name: `Fogata`,
-      tip: `Colócala: cocina pescado y caliéntate por la noche`,
-      info: `Colócala y cocina pescado en ella (el pescado a la brasa alimenta el triple). También te mantiene caliente por la noche.`,
-    },
-  ],
-  wn = [
-    {
-      tool: `raise`,
-      icon: `raise`,
-      name: `Elevar`,
-      tip: `Eleva el terreno`,
-      info: `Sube el terreno un nivel a la vez para formar terrazas y colinas.`,
-    },
-    {
-      tool: `dig`,
-      icon: `lower`,
-      name: `Cavar`,
-      tip: `Cava hoyos y estanques`,
-      info: `Baja el terreno un nivel a la vez. Si cavas lo suficiente, se llenará de agua para formar un estanque.`,
-    },
-    {
-      tool: `remove`,
-      icon: `shovel`,
-      name: `Pala`,
-      tip: `Recoge bloques y mesas de trabajo`,
-      info: `Guarda de vuelta en tu mochila los bloques y las mesas de trabajo.`,
-    },
-  ],
   Tn = { day: `day`, sunset: `sunset`, night: `night`, dawn: `dawn` },
-  En = {
-    day: `Es de día`,
-    sunset: `Está atardeciendo`,
-    night: `Es de noche`,
-    dawn: `Está amaneciendo`,
-  },
   Dn = 550,
   On = `lighthouse.tutorial`,
   Z = /Mac|iPhone|iPad|iPod/.test(navigator.platform) ? `⌘` : `Ctrl`,
@@ -7378,58 +7312,36 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
       let e = this.fisherman
       ;((e.talking = !0), e.waveHand(), (this.soldToday = !1))
       let t = []
-      if (!e.met)
-        (e.meet(),
-          t.push(
-            `¡Ah del barco! Quién lo diría. ¿Alguien viviendo en este peñasco?`,
-            `Me llamo Gil. Pesco en estas aguas desde mi isla, justo detrás del horizonte.`,
-            `¡Te vi sacar ese pez! Te propongo un trato: te compro cualquier pez que pesques. Monedas en mano, trato hecho.`
-          ))
+      if (!e.met) (e.meet(), t.push(...GIL_DIALOGS.firstMeeting))
       else {
-        let n = [
-          `¡Buenos días, camarada! ¿Has pescado algo bueno?`,
-          `¡Hola! Hace un día estupendo. ¿Tienes algún pez para el viejo Gil?`,
-          `¡Aquí estás! Las gaviotas me contaron que no has parado.`,
-          `¡Buen viento! Veamos qué llevas en esa mochila.`,
-        ]
+        let n = GIL_DIALOGS.greetings
         t.push(n[Math.floor(Math.random() * n.length)])
         let r = e.request
         r &&
           !r.done &&
           this.orderTold !== this.clock.workDay &&
-          ((this.orderTold = this.clock.workDay),
-          t.push(
-            `Ah, y antes de que se me olvide: en el mercado de mi isla buscan un lote especial.`,
-            `¡Consígueme todo el lote y te pagaré mucho más que por los peces sueltos!`
-          ))
+          ((this.orderTold = this.clock.workDay), t.push(...GIL_DIALOGS.specialOrderIntro))
       }
       this.gilSays(t)
     }
     gilSays(e) {
       let t = this.fisherman.request,
         n = [
-          { key: `sell`, label: `Vender pescado` },
-          ...(t && !t.done ? [{ key: `order`, label: `El pedido especial` }] : []),
-          { key: `bye`, label: `¡Hasta luego!` },
+          { key: `sell`, label: GIL_DIALOGS.choices.sell },
+          ...(t && !t.done ? [{ key: `order`, label: GIL_DIALOGS.choices.order }] : []),
+          { key: `bye`, label: GIL_DIALOGS.choices.bye },
         ]
       this.hud.talk(`Gil`, `gil`, e, n, (e) => this.gilChoice(e))
     }
     gilChoice(e) {
       let t = this.fisherman
       if (e === `sell`)
-        this.inventory.anyFish
-          ? this.hud.openShop()
-          : this.gilSays([`¿Nada por hoy? No pasa nada. El mar guarda sus peces hasta que estés listo.`])
+        this.inventory.anyFish ? this.hud.openShop() : this.gilSays(GIL_DIALOGS.noFishToSell)
       else if (e === `order`) {
         let e = t.request
         e && this.hud.openOrder(e.want, e.reward)
       } else {
-        let e = this.soldToday
-          ? [
-              `¡Un placer hacer negocios! Con esto ya he cumplido por hoy.`,
-              `Volveré mañana por la mañana, como siempre. ¡No te comas todos los buenos!`,
-            ]
-          : [`¡Buen viento! Estaré por aquí hasta el atardecer por si pescas algo.`]
+        let e = this.soldToday ? GIL_DIALOGS.byeAfterSale : GIL_DIALOGS.byeNoSale
         this.hud.talk(`Gil`, `gil`, e, [], void 0, () => this.byeGil())
       }
     }
@@ -7437,7 +7349,7 @@ var Gn = { blocks: Hn, terrain: Un, shore: Wn },
       this.fisherman.here &&
         (e && this.soldToday
           ? this.gilChoice(`bye`)
-          : this.gilSays([e ? `¿Algo más?` : `Sin prisa. El pedido sigue en pie hasta que vuelva a casa.`]))
+          : this.gilSays([e ? GIL_DIALOGS.afterShopClose : GIL_DIALOGS.afterOrderClose]))
     }
     byeGil() {
       let e = this.fisherman
@@ -7998,6 +7910,7 @@ var Zn = document.getElementById(`scene`),
   await er.init((e) => {
     $n.style.transform = `scaleX(${Math.max(e, 0.05)})`
   }),
+  notifyGameReady(er),
   (window.__readyMs = Math.round(performance.now())),
   er.start(),
   requestAnimationFrame(() => {

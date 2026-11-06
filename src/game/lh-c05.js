@@ -101,6 +101,18 @@ import {
   x as it,
   y as at,
 } from './lh-c04.js'
+import {
+  FISHES as Mr,
+  FISH_IDS as Nr,
+  getFish as Pr,
+  isFishId as Fr,
+  getFishPrice as Ir,
+  getFishFood as Lr,
+  pickRandomFish as Rr,
+  RECIPES as zr,
+  getRecipe as Br,
+  WORLD_CONFIG,
+} from './data/index'
 var ot = class extends je {
   constructor(e) {
     ;(super(e),
@@ -4612,158 +4624,7 @@ if (abs(aWing) > 0.5) {
         this.wake.shape.set(fr, pr, r, this.bob))
     }
   },
-  Mr = [
-    {
-      id: `sardine`,
-      name: `Sardina`,
-      time: `day`,
-      weight: 40,
-      size: 1,
-      price: 10,
-      food: 8,
-      window: 0.95,
-      line: `¡Atrapé una sardina! Rebosa buena onda.`,
-    },
-    {
-      id: `bream`,
-      name: `Besugo`,
-      time: `day`,
-      weight: 30,
-      size: 2,
-      price: 25,
-      food: 12,
-      window: 0.85,
-      line: `¡Atrapé un besugo! Menuda pieza.`,
-    },
-    {
-      id: `parrot`,
-      name: `Pez loro`,
-      time: `day`,
-      weight: 18,
-      size: 3,
-      price: 45,
-      food: 15,
-      window: 0.75,
-      line: `¡Atrapé un pez loro! No para de repetirlo todo.`,
-    },
-    {
-      id: `puffer`,
-      name: `Pez globo`,
-      time: `day`,
-      weight: 12,
-      size: 2,
-      price: 70,
-      food: 10,
-      window: 0.65,
-      line: `¡Atrapé un pez globo! Tampoco es para inflarse así.`,
-    },
-    {
-      id: `snapper`,
-      name: `Pargo rojo`,
-      time: `night`,
-      weight: 32,
-      size: 2,
-      price: 30,
-      food: 14,
-      window: 0.85,
-      line: `¡Atrapé un pargo rojo! ¡Menudo chasquido!`,
-    },
-    {
-      id: `mackerel`,
-      name: `Caballa`,
-      time: `night`,
-      weight: 38,
-      size: 1,
-      price: 15,
-      food: 10,
-      window: 0.95,
-      line: `¡Atrapé una caballa! ¡Vaya caballa!`,
-    },
-    {
-      id: `lantern`,
-      name: `Pez linterna`,
-      time: `night`,
-      weight: 18,
-      size: 1,
-      price: 60,
-      food: 8,
-      window: 0.7,
-      line: `¡Atrapé un pez linterna! Buenas noches, pequeñín.`,
-    },
-    {
-      id: `moonfish`,
-      name: `Pez luna`,
-      time: `night`,
-      weight: 8,
-      size: 4,
-      price: 150,
-      food: 25,
-      window: 0.6,
-      line: `¡Atrapé un pez luna! ¡Estoy en la luna!`,
-    },
-  ],
-  Nr = Mr.map((e) => e.id)
-function Pr(e) {
-  return Mr.find((t) => t.id === e)
-}
-function Fr(e) {
-  return typeof e == `string` && Nr.includes(e)
-}
-function Ir(e, t) {
-  return Pr(e).price * (t ? 3 : 1)
-}
-function Lr(e, t) {
-  return Pr(e).food * (t ? 3 : 1)
-}
-function Rr(e, t = Math.random()) {
-  let n = Mr.filter((t) => t.time === (e ? `night` : `day`)),
-    r = t * n.reduce((e, t) => e + t.weight, 0)
-  for (let e of n) if (((r -= e.weight), r < 0)) return e
-  return n[n.length - 1]
-}
-var zr = [
-  {
-    id: `pickaxe`,
-    name: `Pico de madera`,
-    icon: `pickaxe`,
-    wood: 4,
-    stone: 0,
-    at: `hand`,
-    blurb: `Rompe piedras de las rocas`,
-  },
-  {
-    id: `bench`,
-    name: `Mesa de trabajo`,
-    icon: `bench`,
-    wood: 10,
-    stone: 6,
-    at: `hand`,
-    blurb: `Sirve para hacer bloques y herramientas`,
-  },
-  {
-    id: `bonfire`,
-    name: `Fogata`,
-    icon: `bonfire`,
-    wood: 5,
-    stone: 8,
-    at: `hand`,
-    blurb: `Cocina pescado y te mantiene caliente`,
-    blueprint: !0,
-  },
-  {
-    id: `rod`,
-    name: `Caña de pescar`,
-    icon: `rod`,
-    wood: 6,
-    stone: 2,
-    at: `bench`,
-    blurb: `Pesca desde la orilla`,
-  },
-]
-function Br(e) {
-  return zr.find((t) => t.id === e)
-}
-var Vr = class {
+  Vr = class {
     wood = 0
     stone = 0
     coins = 0
@@ -5040,19 +4901,10 @@ var Vr = class {
         r <= 0 && t > 0.3 && ((this.t = -1), (this.holder.visible = !1)))
     }
   },
-  Ur = [
-    [-8.4, 5.3, 0, 1],
-    [-4.5, 6.7, 2, 0.95],
-    [2.4, 6.3, 1, 1],
-    [-10.3, 2.2, 1, 0.9],
-    [8.5, 0.6, 0, 0.95],
-    [-5.2, -5.3, 2, 1],
-    [4.8, 5.1, 1, 0.85],
-    [2.2, -5, 0, 0.9],
-  ],
+  Ur = WORLD_CONFIG.palmSpawns,
   Wr = { x: -0.5, z: 0.8 },
-  Gr = 15e4,
-  Kr = 9e4,
+  Gr = WORLD_CONFIG.palmStumpMs,
+  Kr = WORLD_CONFIG.palmSaplingMs,
   qr = 1.05,
   Jr = 0.26,
   Yr = new M(0, 1, 0),

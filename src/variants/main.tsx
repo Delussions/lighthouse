@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import icons from '../game/icons'
 import css from '../game/style'
+import { CustomOverlay } from '../ui/CustomOverlay'
 
 /**
  * Lighthouse, a cozy island game, as built by `vite build` (src/game) and mounted in this page:
@@ -55,7 +56,7 @@ function start() {
     if (!name) return fetchAny(input, init)
     return models.then(({ glb }) => {
       const bytes = glb(name)
-      if (!bytes) return new Response(null, { status: 404 })
+      if (!bytes) return fetchAny(input, init)
       return new Response(bytes as BodyInit, {
         headers: {
           'Content-Type': 'model/gltf-binary',
@@ -88,5 +89,5 @@ function start() {
 
 export default function Lighthouse() {
   useEffect(start, [])
-  return null
+  return <CustomOverlay />
 }
